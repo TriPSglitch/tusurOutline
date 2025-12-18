@@ -26,10 +26,10 @@ services:
       - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
       - REDIS_URL=redis://redis:6379
       - URL=https://outline-docs.tusur.ru
-      - COLLABORATION_URL=wss://outline-docs.tusur.ru
-      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru
+      - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
+      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru/collaboration
       - PUBLIC_URL=https://outline-docs.tusur.ru
-      - REALTIME_URL=wss://outline-docs.tusur.ru
+      - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
       - WEBSOCKETS_ENABLED=true
       - PGSSLMODE=disable
       - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru
@@ -51,14 +51,14 @@ services:
       - FORCE_HTTPS=true
       - NODE_ENV=production
       - PORT=3000
-      - TRUST_PROXY=2
+      - TRUST_PROXY=1
 
       - FILE_STORAGE=local
       - FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
       - MAX_IMAGE_UPLOAD_SIZE=10485760
 
-      - COOKIE_DOMAIN=.outline-docs.tusur.ru
-      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - COOKIE_DOMAIN=outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
 

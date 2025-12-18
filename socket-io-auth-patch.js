@@ -1,169 +1,109 @@
-// socket-io-auth-patch.js
+// socket-io-auth-patch.js - исправленная версия
 const fs = require('fs');
 const path = require('path');
 
-// Попробуем найти файл с Socket.IO конфигурацией
-const possibleFiles = [
-    '/opt/outline/build/server/websockets/index.js',
-    '/opt/outline/build/server/websockets.js',
-    '/opt/outline/build/server/websocket.js',
-    '/opt/outline/build/server/socket.js',
-    '/opt/outline/build/server/index.js'
-];
+const serverFile = '/opt/outline/build/server/index.js';
+console.log('Patching Outline Socket.IO authentication...');
 
-let targetFile = null;
-for (const file of possibleFiles) {
-    if (fs.existsSync(file)) {
-        const content = fs.readFileSync(file, 'utf8');
-        if (content.includes('socket.io') || content.includes('io.use') || content.includes('io.on')) {
-            targetFile = file;
-            console.log(`Found Socket.IO file: ${targetFile}`);
-            break;
-        }
-    }
+let code = fs.readFileSync(serverFile, 'utf8');
+
+if (code.includes('TUSUR_SOCKETIO_PATCH_APPLIED')) {
+    console.log('Socket.IO already patched');
+    process.exit(0);
 }
 
-if (!targetFile) {
-    console.log('Could not find Socket.IO file, trying default location...');
-    targetFile = '/opt/outline/build/server/websockets/index.js';
-    
-    // Создаем файл если не существует
-    if (!fs.existsSync(targetFile)) {
-        console.log('Creating websockets directory...');
-        fs.mkdirSync(path.dirname(targetFile), { recursive: true });
-    }
-}
+// Добавляем patch для Socket.IO аутентификации
+const socketIoPatch = `
+// ======= TUSUR SOCKETIO PATCH ========
+console.log('TUSUR_SOCKETIO_PATCH_APPLIED: Adding WebSocket authentication');
 
-// Патч для добавления аутентификации
-const patch = `
-// ======= TUSUR SOCKET.IO AUTH PATCH ========
-console.log('TUSUR_SOCKET_IO_PATCH: Adding authentication middleware');
+const originalCreateWebsocketServer = app.createWebsocketServer;
+app.createWebsocketServer = function(server, services) {
+    console.log('[TUSUR Socket.IO] Creating websocket server with authentication');
 
-const jwt = require('jsonwebtoken');
+    const io = originalCreateWebsocketServer.call(this, server, services);
 
-function addTusurSocketIoAuth(io) {
-    console.log('[TUSUR Socket.IO] Adding authentication middleware');
-    
+    // Добавляем middleware для аутентификации
     io.use(async (socket, next) => {
-        console.log(\`[TUSUR Socket.IO] New connection attempt: \${socket.id}\`);
-        
-        let token = null;
-        
-        // 1. Check query parameters
-        if (socket.handshake.query.accessToken) {
-            token = socket.handshake.query.accessToken;
-            console.log(\`[TUSUR Socket.IO] Token from query: \${token.substring(0, 30)}...\`);
-        }
-        // 2. Check cookies (for browser WebSocket)
-        else if (socket.handshake.headers.cookie) {
-            const cookies = socket.handshake.headers.cookie;
-            const match = cookies.match(/accessToken=([^;]+)/);
-            if (match) {
-                token = match[1];
-                console.log(\`[TUSUR Socket.IO] Token from cookies: \${token.substring(0, 30)}...\`);
-                
-                // Also add to query for compatibility
-                socket.handshake.query.accessToken = token;
-            }
-        }
-        // 3. Check Authorization header
-        else if (socket.handshake.headers.authorization) {
-            const authHeader = socket.handshake.headers.authorization;
-            if (authHeader.startsWith('Bearer ')) {
-                token = authHeader.substring(7);
-                console.log(\`[TUSUR Socket.IO] Token from Authorization header: \${token.substring(0, 30)}...\`);
-            }
-        }
-        
+        console.log(\`[TUSUR Socket.IO] New connection: \${socket.id}\`);
+
+        // Получаем токен из query параметров
+        const token = socket.handshake.query.accessToken;
+
         if (!token) {
-            console.log('[TUSUR Socket.IO] No token found, allowing for testing');
-            // TEMPORARY: Allow connections without token for testing
+            console.log('[TUSUR Socket.IO] No accessToken in query');
+            // Пропускаем - Outline сам обработает
             return next();
         }
-        
+
+        console.log(\`[TUSUR Socket.IO] Token found: \${token.substring(0, 30)}...\`);
+
         try {
-            // Decode token to get user ID
+            // Валидируем токен
+            const jwt = require('jsonwebtoken');
             const decoded = jwt.decode(token);
-            
+
             if (!decoded || !decoded.id) {
-                console.log('[TUSUR Socket.IO] Invalid token format, allowing for testing');
-                // TEMPORARY: Allow even with invalid format
-                return next();
+                console.log('[TUSUR Socket.IO] Invalid token format');
+                return next(new Error('Authentication error'));
             }
-            
-            console.log(\`[TUSUR Socket.IO] User ID from token: \${decoded.id}\`);
-            
-            // Store user info in socket
+
+            console.log(\`[TUSUR Socket.IO] Authenticated user: \${decoded.id}\`);
+
+            // Прикрепляем данные пользователя к сокету
             socket.userId = decoded.id;
             socket.token = token;
-            socket.tusurAuthenticated = true;
-            
-            console.log(\`[TUSUR Socket.IO] Authentication successful for user: \${decoded.id}\`);
-            
+
             return next();
-            
+
         } catch (error) {
             console.error('[TUSUR Socket.IO] Error during authentication:', error);
-            // TEMPORARY: Allow even on error for testing
-            return next();
+            return next(new Error('Authentication error'));
         }
     });
-    
-    console.log('[TUSUR Socket.IO] Authentication middleware added successfully');
-}
 
-// Patch the Socket.IO server creation
-if (typeof module.exports === 'object') {
-    const originalExport = module.exports;
-    
-    // If exports has createWebsocketServer method
-    if (originalExport.createWebsocketServer) {
-        const originalCreate = originalExport.createWebsocketServer;
-        originalExport.createWebsocketServer = function(server, services) {
-            console.log('[TUSUR Socket.IO] Creating websocket server with TUSUR auth');
-            const io = originalCreate.call(this, server, services);
-            addTusurSocketIoAuth(io);
-            return io;
-        };
-    }
-    
-    // If exports is a function
-    else if (typeof originalExport === 'function') {
-        const originalFunction = originalExport;
-        module.exports = function(...args) {
-            const result = originalFunction.apply(this, args);
-            
-            // Check if result is a Socket.IO instance
-            if (result && typeof result.use === 'function') {
-                console.log('[TUSUR Socket.IO] Found Socket.IO instance, adding auth middleware');
-                addTusurSocketIoAuth(result);
-            }
-            
-            return result;
-        };
-    }
-}
-
-console.log('TUSUR Socket.IO authentication patch applied');
-// ======= END TUSUR SOCKET.IO AUTH PATCH ========
+    return io;
+};
+// ======= END TUSUR SOCKETIO PATCH ========
 `;
 
-// Apply the patch
-try {
-    let content = '';
-    if (fs.existsSync(targetFile)) {
-        content = fs.readFileSync(targetFile, 'utf8');
-    }
+// Вставляем patch после TUSUR_PATCH_APPLIED
+const patchMarker = 'TUSUR plugin activated successfully';
+if (code.includes(patchMarker)) {
+    // Ищем точное вхождение с закрывающей кавычкой
+    const markerWithQuote = "console.log('TUSUR plugin activated successfully');";
     
-    // Check if already patched
-    if (content.includes('TUSUR_SOCKET_IO_PATCH')) {
-        console.log('Socket.IO already patched');
+    if (code.includes(markerWithQuote)) {
+        const patchedCode = code.replace(
+            markerWithQuote,
+            `${markerWithQuote}\n${socketIoPatch}`
+        );
+        
+        fs.writeFileSync(serverFile, patchedCode);
+        console.log('Socket.IO authentication patch applied successfully');
     } else {
-        // Add patch to the end of file
-        content += '\n' + patch;
-        fs.writeFileSync(targetFile, content);
-        console.log(`Socket.IO file patched successfully: ${targetFile}`);
+        // Попробуем найти без точки с запятой
+        const markerWithoutSemicolon = "console.log('TUSUR plugin activated successfully')";
+        if (code.includes(markerWithoutSemicolon)) {
+            const patchedCode = code.replace(
+                markerWithoutSemicolon,
+                `${markerWithoutSemicolon};\n${socketIoPatch}`
+            );
+            
+            fs.writeFileSync(serverFile, patchedCode);
+            console.log('Socket.IO authentication patch applied successfully (added missing semicolon)');
+        } else {
+            console.error('Cannot find exact patch marker in server file');
+            
+            // Альтернативный подход: добавьте в конец файла
+            fs.writeFileSync(serverFile, code + '\n' + socketIoPatch);
+            console.log('Socket.IO patch appended to end of file');
+        }
     }
-} catch (error) {
-    console.error('Error patching Socket.IO:', error);
+} else {
+    console.error('Cannot find patch marker in server file');
+    
+    // Добавим в конец файла
+    fs.writeFileSync(serverFile, code + '\n' + socketIoPatch);
+    console.log('Socket.IO patch appended to end of file');
 }

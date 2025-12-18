@@ -12,10 +12,10 @@ services:
       - REDIS_COLLABORATION_URL=redis://redis.tusur.ru:6379/1
       - URL=https://outline-docs.tusur.ru
       - PUBLIC_URL=https://outline-docs.tusur.ru
-      - COLLABORATION_URL=wss://outline-docs.tusur.ru
+      - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - WEBSOCKETS_ENABLED=true
-      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru
-      - REALTIME_URL=wss://outline-docs.tusur.ru
+      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru/collaboration
+      - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
 
       # Настройки публичного доступа
       - FORCE_PUBLIC_SITE=true   # Включаем публичный доступ
@@ -37,9 +37,9 @@ services:
       - SECURE_COOKIES=true
 
       # Дополнительные настройи безопасности
-      - COOKIE_DOMAIN=.outline-docs.tusur.ru
-      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
-      - TRUST_PROXY=2
+      - COOKIE_DOMAIN=outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
+      - TRUST_PROXY=1
       - FORCE_HTTPS=true
 
     # Используем extra_hosts если redis.tusur.ru доступен
