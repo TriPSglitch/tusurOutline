@@ -1,0 +1,55 @@
+services:
+  outline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Основные настройки Outline
+      - SECRET_KEY=${SECRET_KEY}
+      - UTILS_SECRET=${UTILS_SECRET}
+      - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
+      - REDIS_URL=redis://redis.tusur.ru:6379/0
+      - REDIS_COLLABORATION_URL=redis://redis.tusur.ru:6379/1
+      - URL=https://outline-docs.tusur.ru
+      - PUBLIC_URL=https://outline-docs.tusur.ru
+      - COLLABORATION_URL=wss://outline-docs.tusur.ru
+      - WEBSOCKETS_ENABLED=true
+      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru
+      - REALTIME_URL=wss://outline-docs.tusur.ru
+
+      # Настройки публичного доступа
+      - FORCE_PUBLIC_SITE=true   # Включаем публичный доступ
+      - ALLOW_PUBLIC_SHARING=true
+      - ALLOW_VIEWERS=true
+      - ALLOW_SIGNUPS=true   # Включаем самостоятельную регистрацию
+
+      # Настройки для TUSUR интеграции
+      - TUSUR_REDIS_HOST=redis.tusur.ru
+      - TUSUR_REDIS_PORT=6379
+      - TUSUR_SSO_ENABLED=true
+      - NODE_ENV=production
+#      - LOG_LEVEL=debug
+
+      # Настройки домена
+      - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru,localhost
+      - CORS_ORIGIN=https://outline-docs.tusur.ru
+      - SAME_SITE_COOKIE=lax
+      - SECURE_COOKIES=true
+
+      # Дополнительные настройи безопасности
+      - COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - TRUST_PROXY=2
+      - FORCE_HTTPS=true
+
+    # Используем extra_hosts если redis.tusur.ru доступен
+    extra_hosts:
+      - "redis.tusur.ru:${TUSUR_REDIS_IP}"
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - outline_data:/var/lib/outline/data
+      - outline_uploads:/var/lib/outline/uploads
+      - ./ssl:/ssl

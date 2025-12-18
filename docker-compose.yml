@@ -1,0 +1,80 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: outline
+      POSTGRES_USER: outline
+      POSTGRES_PASSWORD: outline123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  outline:
+    image: outlinewiki/outline:latest
+    user: "1000:1000"
+    environment:
+      - SECRET_KEY=ec1e220d522db0a2d4d3d4ece31f0b372d44b33dd02ebd070cbb0691832eea31
+      - UTILS_SECRET=9c945224da5f17bd0fa9958c5835e06cf3b9cb7a75e2ad1a0773e54910cb8e9d
+      - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
+      - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
+      - REDIS_URL=redis://redis:6379
+      - URL=https://outline-docs.tusur.ru
+      - COLLABORATION_URL=wss://outline-docs.tusur.ru
+      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru
+      - PUBLIC_URL=https://outline-docs.tusur.ru
+      - REALTIME_URL=wss://outline-docs.tusur.ru
+      - WEBSOCKETS_ENABLED=true
+      - PGSSLMODE=disable
+      - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru
+      - CORS_ORIGIN=https://outline-docs.tusur.ru
+      - ALLOW_SIGNUPS=true
+
+      # Включение гостевого доступа (публичного) 
+      - FORCE_PUBLIC_SITE=true
+      - FEATURE_PUBLIC_SHARING=true
+
+      # Настройки для публичного доступа
+      - COLLECTION_DEFAULT_VIEW=read
+      - DOCUMENT_DEFAULT_VIEW=read
+      - ALLOW_PUBLIC_SHARING=true
+      - ALLOW_VIEWERS=true
+      - SHARING=true
+
+      # Настройки SSL/HTTPS
+      - FORCE_HTTPS=true
+      - NODE_ENV=production
+      - PORT=3000
+      - TRUST_PROXY=2
+
+      - FILE_STORAGE=local
+      - FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
+      - MAX_IMAGE_UPLOAD_SIZE=10485760
+
+      - COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SECURE_COOKIES=true
+      - SAME_SITE_COOKIE=lax
+
+    volumes:
+      - outline_data:/var/lib/outline/data
+      - outline_uploads:/var/lib/outline/uploads
+      - ./ssl:/ssl
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  postgres_data:
+  outline_data:
+  outline_uploads:

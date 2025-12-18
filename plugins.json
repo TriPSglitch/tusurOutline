@@ -1,0 +1,11 @@
+{
+  "plugins": [
+    {
+      "id": "tusur-warden-plugin",
+      "name": "TUSUR Warden Integration",
+      "description": "Интеграция с единой системой авторизации ТУСУР",
+      "enabled": true,
+      "path": "./plugins/tusur-warden/index.js"
+    }
+  ]
+}

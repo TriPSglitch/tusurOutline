@@ -1,0 +1,33 @@
+{
+  "name": "TUSUR SSO Integration",
+  "description": "Интеграция с единой системой авторизации ТУСУР через warden и Redis",
+  "version": "1.0.0",
+  "settings": {
+    "outlineDomain": "https://outline-docs.tusur.ru",
+    "ssoEnabled": true,
+    "autoRedirect": true,
+    "publicPaths": [
+      "/auth",
+      "/auth/tusur",
+      "/auth/tusur/callback",
+      "/login",
+      "/healthz",
+      "/robots.txt",
+      "/favicon.ico",
+      "/static"
+    ],
+    "redis": {
+      "host": "redis.tusur.ru",
+      "port": 6379,
+      "sessionDb": 4,
+      "userDb": 3,
+      "timeout": 5000
+    },
+    "warden": {
+      "loginUrl": "https://profile.tusur.ru/user/sign_in",
+      "logoutUrl": "https://profile.tusur.ru/user/sign_out",
+      "sessionCookieName": "_session_id",
+      "sessionTimeout": 604800
+    }
+  }
+}
