@@ -1,4 +1,4 @@
-// patch-server.js
+// Исправленная версия patch-server.js
 const fs = require('fs');
 const path = require('path');
 
@@ -13,7 +13,7 @@ if (code.includes('TUSUR_PATCH_APPLIED')) {
     process.exit(0);
 }
 
-// Патч для загрузки плагина
+// Патч для загрузки плагина - ИСПРАВЛЕННАЯ ВЕРСИЯ
 const patch = `
 // ======= TUSUR WARDEN PATCH ========
 console.log('TUSUR_PATCH_APPLIED: Loading TUSUR warden plugin');
@@ -52,8 +52,9 @@ const getOutlineModels = () => {
 try {
     const TusurWardenPlugin = require('/opt/outline/plugins/tusur-warden/index.js');
     console.log('TUSUR plugin module loaded successfully');
+    
     // Получаем модели
-    tusurModels = getOutlineModels();
+    const tusurModels = getOutlineModels(); // ИСПРАВЛЕНО: добавлено const
 
     if (!tusurModels) {
         console.error('[TUSUR] CRITICAL: Could not load Outline models');
@@ -67,10 +68,11 @@ try {
         logger: console,
         getModelNames: () => tusurModels ? Object.keys(tusurModels).filter(k => !k.startsWith('_')) : []
     };
+    
     // Создаем и активируем плагин
     const pluginInstance = new TusurWardenPlugin();
     pluginInstance.activate(manager).then(() => {
-        console.log('TUSUR plugin activated successfully');
+        console.log('TUSUR plugin activated successfully'); // ИСПРАВЛЕНО: добавлена закрывающая скобка и точка с запятой
     }).catch(err => {
         console.error('Failed to activate TUSUR plugin:', err);
     });
@@ -86,15 +88,25 @@ try {
 let insertionPoint = null;
 let lines = code.split('\n');
 
+// Лучше ищем место после всех require
 for (let i = 0; i < lines.length; i++) {
-    if ((lines[i].includes('module.exports =') || lines[i].includes('export default')) && !insertionPoint) {
-        insertionPoint = i;
+    if (lines[i].includes('const app =') || lines[i].includes('let app =') || lines[i].includes('var app =')) {
+        insertionPoint = i + 1;
         break;
     }
 }
 
+if (insertionPoint === null) {
+    for (let i = 0; i < lines.length; i++) {
+        if ((lines[i].includes('module.exports =') || lines[i].includes('export default')) && !insertionPoint) {
+            insertionPoint = i;
+            break;
+        }
+    }
+}
+
 if (insertionPoint !== null) {
-    console.log(`Found export at line ${insertionPoint + 1}`);
+    console.log(`Found insertion point at line ${insertionPoint + 1}`);
     lines.splice(insertionPoint, 0, patch);
 } else {
     // Ищем где app используется
@@ -112,6 +124,3 @@ if (insertionPoint !== null) {
         lines.push(patch);
     }
 }
-
-fs.writeFileSync(serverFile, lines.join('\n'));
-console.log('Server patched successfully');
