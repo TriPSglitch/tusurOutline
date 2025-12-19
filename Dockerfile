@@ -37,11 +37,13 @@ RUN npm install ioredis @koa/router
 
 # Копируем patch файл
 COPY patch-server.js /tmp/patch-server.js
+COPY patch-websocket-origin.js /tmp/patch-websocket-origin.js
 COPY socket-io-auth-patch.js /tmp/socket-io-auth-patch.js
 COPY websocket-token-patch.js /tmp/websocket-token-patch.js
 
 # Патчим сервер
 RUN node /tmp/patch-server.js
+RUN node /tmp/patch-websocket-origin.js
 RUN node /tmp/socket-io-auth-patch.js
 RUN node /tmp/websocket-token-patch.js
 
