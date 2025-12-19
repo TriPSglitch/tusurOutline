@@ -1,135 +1,140 @@
-// websocket-token-patch.js
+// websocket-token-patch-fixed.js
 const fs = require('fs');
+const path = require('path');
 
 const serverFile = '/opt/outline/build/server/index.js';
-console.log('Patching WebSocket token handling (fixed version)...');
+console.log('Patching WebSocket token handling...');
 
 let code = fs.readFileSync(serverFile, 'utf8');
 
-// Сначала исправим синтаксическую ошибку
-if (code.includes('let tusurModels = null;')) {
-    // Проверяем, нет ли двойного объявления
-    const lines = code.split('\n');
-    let tusurModelsCount = 0;
-    
-    for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes('tusurModels') && lines[i].includes('let') || lines[i].includes('const')) {
-            tusurModelsCount++;
-        }
-    }
-    
-    if (tusurModelsCount > 1) {
-        console.log('Found multiple tusurModels declarations, fixing...');
-        // Удаляем лишние объявления, оставляя первое
-        let firstFound = false;
-        const fixedLines = [];
-        
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes('tusurModels') && (lines[i].includes('let') || lines[i].includes('const'))) {
-                if (!firstFound) {
-                    fixedLines.push(lines[i]);
-                    firstFound = true;
-                } else {
-                    // Заменяем на const (если это объявление) или удаляем
-                    if (lines[i].includes('=')) {
-                        // Это объявление с присваиванием - заменяем на присваивание без let/const
-                        fixedLines.push(lines[i].replace(/^(let|const)\s+tusurModels\s*=/, 'tusurModels ='));
-                    } else {
-                        // Пропускаем лишнее объявление
-                        console.log(`Skipping duplicate declaration at line ${i + 1}`);
-                    }
-                }
-            } else {
-                fixedLines.push(lines[i]);
-            }
-        }
-        
-        code = fixedLines.join('\n');
-        fs.writeFileSync(serverFile, code);
-        console.log('Fixed duplicate variable declarations');
-    }
-}
-
-// Теперь добавляем WebSocket патч
-if (code.includes('WEBSOCKET_TOKEN_PATCH_APPLIED')) {
+if (code.includes('WEBSOCKET_TOKEN_PATCH_APPLIED_V2')) {
     console.log('WebSocket token patch already applied');
     process.exit(0);
 }
 
-const patch = `
-// ======= WEBSOCKET TOKEN PATCH ========
-console.log('WEBSOCKET_TOKEN_PATCH_APPLIED: Adding token extraction from cookies');
+// Найдем правильный путь к websockets
+const websocketDir = '/opt/outline/build/server/websockets';
+const websocketFile = path.join(websocketDir, 'index.js');
 
-// Патчим обработку WebSocket соединений
-const patchWebSocketHandling = () => {
-    console.log('[WebSocket Patch] Setting up WebSocket handling');
+if (fs.existsSync(websocketFile)) {
+    console.log('Found websocket file:', websocketFile);
     
-    if (typeof app !== 'undefined' && app.createWebsocketServer) {
-        const originalCreateWebsocketServer = app.createWebsocketServer;
-        
-        app.createWebsocketServer = function(server, services) {
-            console.log('[WebSocket Patch] Creating patched WebSocket server');
-            const io = originalCreateWebsocketServer.call(this, server, services);
-            
-            // Добавляем middleware для извлечения токена из cookies
-            io.use((socket, next) => {
-                console.log(\`[WebSocket Patch] Socket middleware for: \${socket.id}\`);
-                
-                // Извлекаем cookies из handshake
-                const cookieHeader = socket.handshake.headers.cookie;
-                
-                if (cookieHeader) {
-                    // Парсим cookies
-                    const cookies = {};
-                    cookieHeader.split(';').forEach(cookie => {
-                        const parts = cookie.trim().split('=');
-                        if (parts.length === 2) {
-                            cookies[parts[0]] = parts[1];
-                        }
-                    });
-                    
-                    // Добавляем accessToken в query, если он есть в cookies
-                    if (cookies.accessToken && !socket.handshake.query.accessToken) {
-                        socket.handshake.query.accessToken = cookies.accessToken;
-                        console.log(\`[WebSocket Patch] Added token from cookies: \${cookies.accessToken.substring(0, 20)}...\`);
-                    }
-                    
-                    // Добавляем sessionId
-                    if (cookies['connect.sid']) {
-                        const sid = cookies['connect.sid'];
-                        const sessionId = sid.replace(/^s:/, '').split('.')[0];
-                        socket.handshake.query.sessionId = sessionId;
-                    }
+    let wsCode = fs.readFileSync(websocketFile, 'utf8');
+    
+    // Проверяем, не патчили ли уже
+    if (wsCode.includes('WEBSOCKET_TOKEN_PATCH_APPLIED_V2')) {
+        console.log('WebSocket file already patched');
+    } else {
+        const wsPatch = `
+// ======= WEBSOCKET TOKEN PATCH V2 ========
+console.log('WEBSOCKET_TOKEN_PATCH_APPLIED_V2: Adding token extraction from cookies');
+
+// Патчим обработку соединений
+const originalHandleUpgrade = server.handleUpgrade;
+if (originalHandleUpgrade) {
+    server.handleUpgrade = function(request, socket, head) {
+        // Извлекаем cookies из заголовков
+        const cookieHeader = request.headers.cookie;
+        if (cookieHeader) {
+            // Парсим cookies
+            const cookies = {};
+            cookieHeader.split(';').forEach(cookie => {
+                const parts = cookie.trim().split('=');
+                if (parts.length === 2) {
+                    cookies[parts[0]] = parts[1];
                 }
-                
-                // Продолжаем стандартную обработку
-                next();
             });
             
-            return io;
-        };
+            // Добавляем accessToken к query параметрам
+            if (cookies.accessToken) {
+                const url = require('url');
+                const parsedUrl = url.parse(request.url, true);
+                parsedUrl.query.accessToken = cookies.accessToken;
+                parsedUrl.search = null;
+                request.url = url.format(parsedUrl);
+                console.log('[WebSocket Patch] Added token to URL query');
+            }
+        }
         
-        console.log('[WebSocket Patch] WebSocket server patched successfully');
-    } else {
-        console.log('[WebSocket Patch] Cannot find app.createWebsocketServer');
-    }
-};
-
-// Вызываем патч при загрузке
-setTimeout(patchWebSocketHandling, 1000);
-// ======= END WEBSOCKET TOKEN PATCH ========
+        return originalHandleUpgrade.call(this, request, socket, head);
+    };
+    
+    console.log('[WebSocket Patch] WebSocket server patched successfully');
+}
+// ======= END WEBSOCKET TOKEN PATCH V2 ========
 `;
-
-// Добавляем патч
-const marker = 'TUSUR plugin activated successfully';
-if (code.includes(marker)) {
-    const markerIndex = code.indexOf(marker);
-    const insertIndex = markerIndex + marker.length + 1;
-    const patchedCode = code.slice(0, insertIndex) + '\n' + patch + code.slice(insertIndex);
-    fs.writeFileSync(serverFile, patchedCode);
-    console.log('WebSocket token patch applied successfully');
+        
+        // Вставляем патч в websocket файл
+        if (wsCode.includes('module.exports =') || wsCode.includes('export default')) {
+            const lines = wsCode.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes('module.exports =') || lines[i].includes('export default')) {
+                    lines.splice(i, 0, wsPatch);
+                    break;
+                }
+            }
+            wsCode = lines.join('\n');
+        } else {
+            wsCode += wsPatch;
+        }
+        
+        fs.writeFileSync(websocketFile, wsCode);
+        console.log('WebSocket file patched successfully');
+    }
 } else {
-    // Добавляем в конец
-    fs.writeFileSync(serverFile, code + '\n' + patch);
-    console.log('WebSocket token patch appended to end of file');
+    console.log('WebSocket file not found, trying to patch main server file');
+    
+    // Альтернатива: патчим основной файл
+    const mainPatch = `
+// ======= WEBSOCKET TOKEN PATCH V2 ========
+console.log('WEBSOCKET_TOKEN_PATCH_APPLIED_V2: Adding token extraction from cookies');
+
+// Эта функция будет вызвана при инициализации WebSocket
+setTimeout(() => {
+    console.log('[WebSocket Patch V2] Initializing WebSocket token handling');
+    
+    // Патчим Socket.IO middleware если он есть
+    if (global.io) {
+        console.log('[WebSocket Patch V2] Found global.io, patching...');
+        
+        global.io.use((socket, next) => {
+            console.log(\`[WebSocket Patch V2] Socket connection: \${socket.id}\`);
+            
+            // Проверяем cookies
+            const cookieHeader = socket.handshake.headers.cookie;
+            if (cookieHeader) {
+                const cookies = {};
+                cookieHeader.split(';').forEach(cookie => {
+                    const parts = cookie.trim().split('=');
+                    if (parts.length === 2) {
+                        cookies[parts[0]] = parts[1];
+                    }
+                });
+                
+                // Добавляем токен из cookies в query
+                if (cookies.accessToken && !socket.handshake.query.accessToken) {
+                    socket.handshake.query.accessToken = cookies.accessToken;
+                    console.log('[WebSocket Patch V2] Added token from cookies to query');
+                }
+            }
+            
+            next();
+        });
+    }
+}, 2000);
+// ======= END WEBSOCKET TOKEN PATCH V2 ========
+`;
+    
+    // Добавляем патч в основной файл
+    if (code.includes('TUSUR_PATCH_APPLIED')) {
+        // Вставляем после TUSUR патча
+        const tusurIndex = code.indexOf('TUSUR_PATCH_APPLIED');
+        const insertIndex = code.indexOf('\n', tusurIndex) + 1;
+        code = code.slice(0, insertIndex) + mainPatch + code.slice(insertIndex);
+    } else {
+        code += mainPatch;
+    }
+    
+    fs.writeFileSync(serverFile, code);
+    console.log('Main server file patched with WebSocket token handling');
 }
