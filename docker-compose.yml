@@ -35,6 +35,8 @@ services:
       - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru
       - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
+      - WEB_SOCKETS=true
+      - ALLOWED_WEBSOCKET_ORIGINS=wss://outline-docs.tusur.ru
 
       # Включение гостевого доступа (публичного) 
       - FORCE_PUBLIC_SITE=true
@@ -52,6 +54,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - TRUST_PROXY=1
+      - PROXY_SSL=true
 
       - FILE_STORAGE=local
       - FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
@@ -61,6 +64,7 @@ services:
       - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
+      - DEBUG=engine.io:socket,socket.io:client
 
     volumes:
       - outline_data:/var/lib/outline/data

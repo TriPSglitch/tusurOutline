@@ -26,11 +26,11 @@ class WardenMiddleware {
     }
 
     if (manager.app && typeof manager.app.use === 'function') {
-        manager.app.use(this.createMiddleware());
-        this._registred = true;
-        console.log('[TUSUR Warden Middleware] Middleware зарегистрирован');
+      manager.app.use(this.createMiddleware());
+      this._registred = true;
+      console.log('[TUSUR Warden Middleware] Middleware зарегистрирован');
     } else {
-        console.error('[TUSUR DEBUG] Cannot register middleware: app or app.use not available');
+      console.error('[TUSUR DEBUG] Cannot register middleware: app or app.use not available');
     }
 
     console.log('[TUSUR Warden Middleware] Middleware зарегестрирован');
@@ -51,7 +51,7 @@ class WardenMiddleware {
       console.log(`[TUSUR DEBUG FULL] Запрос: ${ctx.method} ${ctx.path}`);
       console.log(`[TUSUR DEBUG FULL] Headers:`, ctx.headers);
       console.log(`[TUSUR DEBUG FULL] Query:`, ctx.query);
-//      console.log(`[TUSUR DEBUG FULL] Cookies:`, ctx.cookies);
+      //      console.log(`[TUSUR DEBUG FULL] Cookies:`, ctx.cookies);
       console.log(`[TUSUR DEBUG FULL] Upgrade header:`, ctx.headers.upgrade);
 
       // Если этот контекст уже обработан, пропускаем
@@ -275,12 +275,12 @@ class WardenMiddleware {
     if (path.startsWith('/collaboration/')) {
       return false; // Требует аутентификации
     }
-/*
-    // Пропускаем WebSocket запросы - они обрабатываются отдельно
-    if (ctx.headers.upgrade && ctx.headers.upgrade.toLowerCase() === 'websocket') {
-      return false; // Требует специальной обработки
-    }
-*/
+    /*
+        // Пропускаем WebSocket запросы - они обрабатываются отдельно
+        if (ctx.headers.upgrade && ctx.headers.upgrade.toLowerCase() === 'websocket') {
+          return false; // Требует специальной обработки
+        }
+    */
     // Добавьте /realtime/ в публичные пути или обрабатывайте отдельно
     if (path.startsWith('/realtime/')) {
       return false; // Обрабатывается в WebSocket секции
@@ -516,7 +516,7 @@ class WardenMiddleware {
       // 5. Сохранить accessToken где-нибудь для отладки/проверки
       // Например, в Redis ТУСУР
 
-     /* await this.redis.sessionRedis.setex(
+      /* await this.redis.sessionRedis.setex(
         `outline:user:${outlineUser.id}:accessToken`,
         7 * 24 * 60 * 60,
         JSON.stringify({
@@ -1006,8 +1006,8 @@ class WardenMiddleware {
 
       const sessionStore = ctx.sessionStore;
       if (!sessionStore) {
-          console.error('[TUSUR Redis Session] sessionStore не найден в ctx');
-          return null;
+        console.error('[TUSUR Redis Session] sessionStore не найден в ctx');
+        return null;
       }
 
       // Генерируем уникальный ID сессии
@@ -1015,32 +1015,32 @@ class WardenMiddleware {
 
       // Создаем объект сессии, как ожидает koa-session
       const sessionData = {
-          userId: outlineUser.id,
-          passport: { user: outlineUser.id },
-          cookie: {
-              originalMaxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
-              expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-              secure: this.config.forceHttps,
-              httpOnly: true,
-              path: '/',
-              domain: '.outline-docs.tusur.ru',
-              sameSite: 'lax'
-          },
-          createdAt: new Date().toISOString(),
-          views: 1
+        userId: outlineUser.id,
+        passport: { user: outlineUser.id },
+        cookie: {
+          originalMaxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
+          expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          secure: this.config.forceHttps,
+          httpOnly: true,
+          path: '/',
+          domain: '.outline-docs.tusur.ru',
+          sameSite: 'lax'
+        },
+        createdAt: new Date().toISOString(),
+        views: 1
       };
 
       // Сохраняем сессию в Redis
       await new Promise((resolve, reject) => {
-          sessionStore.set(sessionId, sessionData, (err) => {
-              if (err) {
-                  console.error('[TUSUR Redis Session] Ошибка сохранения сессии:', err);
-                  reject(err);
-              } else {
-                  console.log(`[TUSUR Redis Session] Сессия сохранена в Redis: ${sessionId.substring(0, 10)}...`);
-                  resolve();
-              }
-          });
+        sessionStore.set(sessionId, sessionData, (err) => {
+          if (err) {
+            console.error('[TUSUR Redis Session] Ошибка сохранения сессии:', err);
+            reject(err);
+          } else {
+            console.log(`[TUSUR Redis Session] Сессия сохранена в Redis: ${sessionId.substring(0, 10)}...`);
+            resolve();
+          }
+        });
       });
 
       // Устанавливаем куку connect.sid с ПРАВИЛЬНОЙ ПОДПИСЬЮ
@@ -1049,12 +1049,12 @@ class WardenMiddleware {
       const signedSession = `s:${sessionId}.${signature}`;
 
       ctx.cookies.set('connect.sid', signedSession, {
-          httpOnly: true,
-          secure: this.config.forceHttps,
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-          domain: '.outline-docs.tusur.ru',
-          path: '/'
+        httpOnly: true,
+        secure: this.config.forceHttps,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        domain: '.outline-docs.tusur.ru',
+        path: '/'
       });
 
       console.log(`[TUSUR Redis Session] Кука connect.sid установлена: ${signedSession.substring(0, 50)}...`);
@@ -1218,7 +1218,8 @@ class WardenMiddleware {
     }
   }
 
-  async getValidExistingToken(ctx, email) { try {
+  async getValidExistingToken(ctx, email) {
+    try {
       const existingToken = ctx.cookies.get('accessToken');
       if (!existingToken) {
         return null;

@@ -14,8 +14,10 @@ services:
       - PUBLIC_URL=https://outline-docs.tusur.ru
       - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - WEBSOCKETS_ENABLED=true
+      - WEB_SOCKETS=true
       - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru/collaboration
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
+      - ALLOWED_WEBSOCKET_ORIGINS=wss://outline-docs.tusur.ru
 
       # Настройки публичного доступа
       - FORCE_PUBLIC_SITE=true   # Включаем публичный доступ
@@ -28,7 +30,8 @@ services:
       - TUSUR_REDIS_PORT=6379
       - TUSUR_SSO_ENABLED=true
       - NODE_ENV=production
-#      - LOG_LEVEL=debug
+      #      - LOG_LEVEL=debug
+      - DEBUG=engine.io:socket,socket.io:client
 
       # Настройки домена
       - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru,localhost
@@ -41,6 +44,8 @@ services:
       - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
       - TRUST_PROXY=1
       - FORCE_HTTPS=true
+      - PROXY_SSL=true
+      - PROXY=true
 
     # Используем extra_hosts если redis.tusur.ru доступен
     extra_hosts:
