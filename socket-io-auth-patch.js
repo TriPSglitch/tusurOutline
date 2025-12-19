@@ -11,12 +11,21 @@ if (code.includes('TUSUR_SOCKETIO_PATCH_APPLIED')) {
     process.exit(0);
 }
 
+// Проверяем, есть ли основной патч
+if (!code.includes('TUSUR_PATCH_APPLIED')) {
+    console.error('ERROR: TUSUR_PATCH_APPLIED not found. Apply patch-server.js first!');
+    process.exit(1);
+}
+
 // Добавляем patch для Socket.IO аутентификации
 const socketIoPatch = `
 // ======= TUSUR SOCKETIO PATCH ========
 console.log('TUSUR_SOCKETIO_PATCH_APPLIED: Adding WebSocket authentication');
 
+// Проверяем, существует ли app.createWebsocketServer
 if (typeof app !== 'undefined' && app.createWebsocketServer) {
+    console.log('[TUSUR Socket.IO] Found app.createWebsocketServer, patching...');
+    
     const originalCreateWebsocketServer = app.createWebsocketServer;
     app.createWebsocketServer = function(server, services) {
         console.log('[TUSUR Socket.IO] Creating websocket server with authentication');
@@ -70,18 +79,48 @@ if (typeof app !== 'undefined' && app.createWebsocketServer) {
 // ======= END TUSUR SOCKETIO PATCH ========
 `;
 
-// Ищем более надежный маркер для вставки
-const patchMarker = 'TUSUR_PATCH_APPLIED';
-if (code.includes(patchMarker)) {
-    // Вставляем после TUSUR_PATCH_APPLIED
-    const markerIndex = code.indexOf(patchMarker);
-    const insertIndex = code.indexOf('\n', markerIndex) + 1;
+// Вставляем patch в правильное место - после активации плагина
+const marker = "console.log('TUSUR plugin activated successfully');";
+if (code.includes(marker)) {
+    const markerIndex = code.indexOf(marker);
+    const insertIndex = markerIndex + marker.length;
     
-    const patchedCode = code.slice(0, insertIndex) + socketIoPatch + code.slice(insertIndex);
+    const patchedCode = code.slice(0, insertIndex) + '\n' + socketIoPatch + code.slice(insertIndex);
     
     fs.writeFileSync(serverFile, patchedCode);
     console.log('Socket.IO authentication patch applied successfully');
 } else {
-    console.error('Cannot find TUSUR_PATCH_APPLIED marker in server file');
+    // Пробуем найти альтернативный маркер
+    console.log('Looking for alternative marker...');
+    
+    // Ищем любую строку с TUSUR plugin activated
+    const altMarker = "TUSUR plugin activated";
+    if (code.includes(altMarker)) {
+        const markerLine = code.split('\n').find(line => line.includes(altMarker));
+        if (markerLine) {
+            const markerIndex = code.indexOf(markerLine);
+            const insertIndex = markerIndex + markerLine.length;
+            
+            const patchedCode = code.slice(0, insertIndex) + '\n' + socketIoPatch + code.slice(insertIndex);
+            
+            fs.writeFileSync(serverFile, patchedCode);
+            console.log('Socket.IO authentication patch applied using alternative marker');
+        } else {
+            console.error('Cannot find activation marker');
+            process.exit(1);
+        }
+    } else {
+        // Добавляем в конец файла
+        console.log('Adding Socket.IO patch to end of file');
+        fs.writeFileSync(serverFile, code + '\n' + socketIoPatch);
+    }
+}
+
+// Проверяем результат
+const finalCode = fs.readFileSync(serverFile, 'utf8');
+if (finalCode.includes('TUSUR_SOCKETIO_PATCH_APPLIED')) {
+    console.log('Socket.IO patch successfully applied');
+} else {
+    console.error('Failed to apply Socket.IO patch');
     process.exit(1);
 }
