@@ -16,10 +16,10 @@ const patch = `
 console.log('WEBSOCKET_FIX_PATCH_APPLIED: Fixing WebSocket authentication');
 
 // Monkey patch для WebSocket сервера
-const originalInit = require('./server/websockets').init;
+const originalInit = require('/opt/outline/build/server/websockets/index.js').init;
 
 if (originalInit) {
-    require('./server/websockets').init = function(app, server, serviceNames) {
+    require('/opt/outline/build/server/websockets/index.js').init = function(app, server, serviceNames) {
         console.log('[WebSocket Fix] Initializing WebSocket with TUSUR authentication');
         
         const io = originalInit.call(this, app, server, serviceNames);
