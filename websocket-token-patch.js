@@ -13,7 +13,7 @@ if (code.includes('WEBSOCKET_TOKEN_PATCH_APPLIED_V2')) {
 }
 
 // Найдем правильный путь к websockets
-const websocketDir = '/opt/outline/build/server/websockets';
+const websocketDir = '/opt/outline/build/server/websockets/index.js';
 const websocketFile = path.join(websocketDir, 'index.js');
 
 if (fs.existsSync(websocketFile)) {
