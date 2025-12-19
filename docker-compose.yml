@@ -36,7 +36,8 @@ services:
       - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
       - WEB_SOCKETS=true
-      - ALLOWED_WEBSOCKET_ORIGINS=wss://outline-docs.tusur.ru
+      - ALLOWED_WEBSOCKET_ORIGINS=*
+      - DISABLE_ORIGIN_CHECK=true
 
       # Включение гостевого доступа (публичного) 
       - FORCE_PUBLIC_SITE=true
@@ -64,7 +65,8 @@ services:
       - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
-      - DEBUG=engine.io:socket,socket.io:client
+      - LOG_LEVEL=debug
+      - DEBUG=engine*
 
     volumes:
       - outline_data:/var/lib/outline/data

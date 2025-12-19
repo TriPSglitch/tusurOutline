@@ -17,21 +17,22 @@ services:
       - WEB_SOCKETS=true
       - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru/collaboration
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
-      - ALLOWED_WEBSOCKET_ORIGINS=wss://outline-docs.tusur.ru
+      - ALLOWED_WEBSOCKET_ORIGINS=*
+      - DISABLE_ORIGIN_CHECK=true
 
       # Настройки публичного доступа
       - FORCE_PUBLIC_SITE=true   # Включаем публичный доступ
       - ALLOW_PUBLIC_SHARING=true
+
       - ALLOW_VIEWERS=true
       - ALLOW_SIGNUPS=true   # Включаем самостоятельную регистрацию
-
       # Настройки для TUSUR интеграции
       - TUSUR_REDIS_HOST=redis.tusur.ru
       - TUSUR_REDIS_PORT=6379
       - TUSUR_SSO_ENABLED=true
       - NODE_ENV=production
-      #      - LOG_LEVEL=debug
-      - DEBUG=engine.io:socket,socket.io:client
+      - LOG_LEVEL=debug
+      - DEBUG=engine*
 
       # Настройки домена
       - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru,localhost
