@@ -18,10 +18,6 @@ const patch = `
 // ======= TUSUR WARDEN PATCH ========
 console.log('TUSUR_PATCH_APPLIED: Loading TUSUR warden plugin');
 
-// Глобальная переменная для хранения моделей
-let tusurModels = null;
-let pluginInstance = null;
-
 // Функция для получения моделей Outline
 const getOutlineModels = () => {
     console.log('[TUSUR] Loading Outline models from /opt/outline/build/server/models/index.js');
