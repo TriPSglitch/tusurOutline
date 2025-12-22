@@ -16,12 +16,14 @@ services:
       - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - WEBSOCKETS_ENABLED=true
       - WEB_SOCKETS=true
-      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru/collaboration
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
       - ALLOWED_WEBSOCKET_ORIGINS=*
       - DISABLE_ORIGIN_CHECK=true
       - WEBSOCKET_ORIGIN=https://outline-docs.tusur.ru
       - WEBSOCKET_TRANSPORTS=websocket,polling
+      - WEBSOCKET_PATH=/realtime
+      - SOCKET_PATH=/realtime
+      - WEBSOCKET_ALLOWED_ORIGINS=https://outline-docs.tusur.ru
 
       # Настройки публичного доступа
       - FORCE_PUBLIC_SITE=true   # Включаем публичный доступ
@@ -46,7 +48,7 @@ services:
       # Дополнительные настройи безопасности
       - COOKIE_DOMAIN=outline-docs.tusur.ru
       - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
-      - TRUST_PROXY=1
+      - TRUST_PROXY=2
       - FORCE_HTTPS=true
       - PROXY_SSL=true
       - PROXY=true

@@ -4,6 +4,13 @@ set -e
 echo "=== Запуск Outline с TUSUR плагином ==="
 echo "Текущая директория: $(pwd)"
 
+# Проверяем WebSocket настройки
+echo "Проверка WebSocket настроек..."
+echo "WEBSOCKET_URL=${WEBSOCKET_URL}"
+echo "COLLABORATION_URL=${COLLABORATION_URL}"
+echo "REALTIME_URL=${REALTIME_URL}"
+echo "ALLOWED_WEBSOCKET_ORIGINS=${ALLOWED_WEBSOCKET_ORIGINS}"
+
 # Проверяем существование плагина
 if [ -f "plugins/tusur-warden/index.js" ]; then
     echo "TUSUR плагин найден"
@@ -43,6 +50,14 @@ if grep -q "TUSUR_PATCH_APPLIED" ./build/server/index.js; then
     echo "✓ TUSUR патч найден"
 else
     echo "✗ TUSUR патч не найден"
+fi
+
+# Проверяем WebSocket патчи
+echo "Проверка WebSocket патчей..."
+if grep -q "TUSUR_WEBSOCKET_FIX" ./build/server/websockets/index.js; then
+    echo "✓ WebSocket fix найден"
+else
+    echo "✗ WebSocket fix не найден"
 fi
 
 # Запускаем Outline

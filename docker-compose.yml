@@ -27,7 +27,6 @@ services:
       - REDIS_URL=redis://redis:6379
       - URL=https://outline-docs.tusur.ru
       - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
-      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru/collaboration
       - PUBLIC_URL=https://outline-docs.tusur.ru
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
       - WEBSOCKETS_ENABLED=true
@@ -40,6 +39,10 @@ services:
       - DISABLE_ORIGIN_CHECK=true
       - WEBSOCKET_TRANSPORTS=websocket,polling
       - WEBSOCKET_ORIGIN=https://outline-docs.tusur.ru
+      - WEBSOCKET_ALLOWED_ORIGINS=https://outline-docs.tusur.ru
+      - WEBSOCKET_PATH=/realtime
+      - SOCKET_PATH=/realtime
+      - WEBSOCKET_URL=wss://outline-docs.tusur.ru
 
       # Включение гостевого доступа (публичного) 
       - FORCE_PUBLIC_SITE=true
@@ -56,7 +59,7 @@ services:
       - FORCE_HTTPS=true
       - NODE_ENV=production
       - PORT=3000
-      - TRUST_PROXY=1
+      - TRUST_PROXY=2
       - PROXY_SSL=true
       - PROXY_TRUST=loopback,uniquelocal
       - PROXY=true
