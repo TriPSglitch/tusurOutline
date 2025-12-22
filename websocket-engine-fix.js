@@ -1,110 +1,102 @@
-// websocket-engine-fix.js
 const fs = require('fs');
 const path = require('path');
 
 const websocketFile = '/opt/outline/build/server/websockets/index.js';
-console.log('Fixing engine transport upgrade...');
+console.log('Applying final WebSocket engine fix...');
 
-let code = fs.readFileSync(websocketFile, 'utf8');
+// Сначала создаем простой рабочий WebSocket файл
+const simpleWebSocketCode = `
+const { Server } = require('socket.io');
 
-if (code.includes('ENGINE_UPGRADE_FIX')) {
-    console.log('Already patched');
-    process.exit(0);
-}
-
-const fix = `
-// ======= ENGINE UPGRADE FIX ========
-console.log('ENGINE_UPGRADE_FIX: Patching Socket.IO engine');
-
-// Monkey patch для исправления upgrade
-const originalInit = (() => {
-    // Сохраняем оригинальную функцию
-    const original = require('/opt/outline/build/server/websockets/index.js').init;
+function init(app, server, serviceNames) {
+    console.log('[WebSocket Final] Creating Socket.IO server');
     
-    return function(app, server, serviceNames) {
-        console.log('[Engine Fix] Initializing WebSocket with fixed upgrade');
+    const io = new Server(server, {
+        path: '/realtime/',
+        cors: {
+            origin: ['https://outline-docs.tusur.ru', 'http://outline-docs.tusur.ru'],
+            credentials: true,
+            methods: ['GET', 'POST']
+        },
+        transports: ['websocket', 'polling'],
+        allowEIO3: true,
+        pingTimeout: 60000,
+        pingInterval: 25000,
+        cookie: false
+    });
+    
+    // Middleware для аутентификации
+    io.use((socket, next) => {
+        console.log(\`[WebSocket Final] New connection: \${socket.id}\`);
         
-        const io = original.call(this, app, server, serviceNames);
+        // Получаем токен из разных источников
+        let token = socket.handshake.query.accessToken || 
+                   socket.handshake.query.token;
         
-        // Исправляем обработку upgrade
-        if (io.engine) {
-            const originalHandleRequest = io.engine.handleRequest;
-            
-            io.engine.handleRequest = function(req, res) {
-                console.log(\`[Engine Fix] Request: \${req.method} \${req.url}\`);
-                console.log(\`[Engine Fix] Upgrade header: \${req.headers.upgrade}\`);
-                console.log(\`[Engine Fix] Connection header: \${req.headers.connection}\`);
-                
-                // Разрешаем все upgrade
-                if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
-                    console.log('[Engine Fix] Allowing WebSocket upgrade');
-                    
-                    // Добавляем заголовки если их нет
-                    if (!req.headers.origin) {
-                        req.headers.origin = req.headers.host || 'https://outline-docs.tusur.ru';
-                    }
-                    
-                    if (!req.headers.secwebsocketversion) {
-                        req.headers.secwebsocketversion = '13';
-                    }
+        // Или из cookies
+        if (!token && socket.handshake.headers.cookie) {
+            const cookies = {};
+            socket.handshake.headers.cookie.split(';').forEach(cookie => {
+                const parts = cookie.trim().split('=');
+                if (parts.length === 2) {
+                    cookies[parts[0]] = parts[1];
                 }
-                
-                return originalHandleRequest.call(this, req, res);
-            };
+            });
+            
+            token = cookies.accessToken || cookies.token;
         }
         
-        // Middleware для аутентификации
-        io.use((socket, next) => {
-            console.log(\`[Engine Fix] Socket connection: \${socket.id}\`);
-            
-            // Пробуем получить токен
-            let token = socket.handshake.query.accessToken || 
-                       socket.handshake.query.token;
-            
-            if (!token && socket.handshake.headers.cookie) {
-                const cookies = {};
-                socket.handshake.headers.cookie.split(';').forEach(cookie => {
-                    const [key, value] = cookie.trim().split('=');
-                    if (key && value) cookies[key] = value;
-                });
-                
-                token = cookies.accessToken || cookies.token;
-            }
-            
-            console.log(\`[Engine Fix] Token: \${token ? 'found' : 'not found'}\`);
-            
-            if (token) {
-                try {
-                    const jwt = require('jsonwebtoken');
-                    const decoded = jwt.decode(token);
-                    if (decoded && decoded.id) {
-                        socket.userId = decoded.id;
-                        console.log(\`[Engine Fix] User authenticated: \${decoded.id}\`);
-                    }
-                } catch (e) {
-                    console.log('[Engine Fix] Token decode error:', e.message);
+        console.log(\`[WebSocket Final] Token: \${token ? 'found' : 'not found'}\`);
+        
+        if (token) {
+            try {
+                const jwt = require('jsonwebtoken');
+                const decoded = jwt.decode(token);
+                if (decoded && decoded.id) {
+                    socket.userId = decoded.id;
+                    console.log(\`[WebSocket Final] User authenticated: \${decoded.id}\`);
                 }
+            } catch (e) {
+                console.log('[WebSocket Final] Token decode error:', e.message);
             }
-            
-            next();
+        }
+        
+        next();
+    });
+    
+    io.on('connection', (socket) => {
+        console.log(\`[WebSocket Final] Client connected: \${socket.id}, user: \${socket.userId || 'anonymous'}\`);
+        
+        socket.on('disconnect', () => {
+            console.log(\`[WebSocket Final] Client disconnected: \${socket.id}\`);
         });
         
-        return io;
-    };
-})();
-
-// Заменяем экспорт
-module.exports = { init: originalInit };
-// ======= END ENGINE UPGRADE FIX ========
-`;
-
-// Добавляем патч
-if (code.includes('module.exports')) {
-    // Заменяем весь экспорт
-    code = code.replace(/module\.exports\s*=.*$/m, fix);
-} else {
-    code += fix;
+        // Для тестирования
+        socket.on('ping', (data) => {
+            console.log(\`[WebSocket Final] Ping from \${socket.id}: \${data}\`);
+            socket.emit('pong', { time: new Date().toISOString() });
+        });
+    });
+    
+    console.log('[WebSocket Final] Socket.IO server ready');
+    return io;
 }
 
-fs.writeFileSync(websocketFile, code);
-console.log('Engine upgrade fix applied');
+module.exports = { init };
+`;
+
+// Записываем новый файл
+fs.writeFileSync(websocketFile, simpleWebSocketCode);
+console.log('Created simple WebSocket file');
+
+// Также создадим резервную копию оригинального файла
+const backupFile = websocketFile + '.backup';
+if (!fs.existsSync(backupFile)) {
+    try {
+        if (fs.existsSync('/opt/outline/build/server/websockets/index.js.backup')) {
+            fs.copyFileSync('/opt/outline/build/server/websockets/index.js.backup', backupFile);
+        }
+    } catch (e) {
+        // игнорируем ошибки
+    }
+}
