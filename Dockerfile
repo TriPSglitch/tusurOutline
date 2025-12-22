@@ -42,6 +42,7 @@ COPY socket-io-auth-patch.js /tmp/socket-io-auth-patch.js
 COPY websocket-token-patch.js /tmp/websocket-token-patch.js
 COPY websocket-fix-patch.js /tmp/websocket-fix-patch.js
 COPY websocket-origin-fix.js /tmp/websocket-origin-fix.js
+COPY websocket-simple-fix.js /tmp/websocket-simple-fix.js
 
 # Патчим сервер
 RUN node /tmp/patch-server.js
@@ -50,6 +51,7 @@ RUN node /tmp/socket-io-auth-patch.js
 RUN node /tmp/websocket-token-patch.js
 RUN node /tmp/websocket-fix-patch.js
 RUN node /tmp/websocket-origin-fix.js
+RUN node /tmp/websocket-simple-fix.js
 
 # Копируем entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

@@ -25,7 +25,7 @@ services:
       - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
       - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
       - REDIS_URL=redis://redis:6379
-      - URL=https://outline-docs.tusur.ru
+      - URL=http://outline-docs.tusur.ru
       - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - PUBLIC_URL=https://outline-docs.tusur.ru
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
@@ -35,11 +35,11 @@ services:
       - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
       - WEB_SOCKETS=true
-      - ALLOWED_WEBSOCKET_ORIGINS=*
-      - DISABLE_ORIGIN_CHECK=true
-      - WEBSOCKET_TRANSPORTS=websocket,polling
-      - WEBSOCKET_ORIGIN=https://outline-docs.tusur.ru
-      - WEBSOCKET_ALLOWED_ORIGINS=https://outline-docs.tusur.ru
+      - ALLOWED_WEBSOCKET_ORIGINS=https://outline-docs.tusur.ru
+      # - DISABLE_ORIGIN_CHECK=true
+      # - WEBSOCKET_TRANSPORTS=websocket,polling
+      # - WEBSOCKET_ORIGIN=https://outline-docs.tusur.ru
+      # - WEBSOCKET_ALLOWED_ORIGINS=https://outline-docs.tusur.ru
       - WEBSOCKET_PATH=/realtime
       - SOCKET_PATH=/realtime
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
@@ -56,7 +56,7 @@ services:
       - SHARING=true
 
       # Настройки SSL/HTTPS
-      - FORCE_HTTPS=true
+      - FORCE_HTTPS=false
       - NODE_ENV=production
       - PORT=3000
       - TRUST_PROXY=2

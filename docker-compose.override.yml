@@ -10,20 +10,20 @@ services:
       - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
       - REDIS_URL=redis://redis.tusur.ru:6379/0
       - REDIS_COLLABORATION_URL=redis://redis.tusur.ru:6379/1
-      - URL=https://outline-docs.tusur.ru
+      - URL=http://outline-docs.tusur.ru
       - PUBLIC_URL=https://outline-docs.tusur.ru
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
       - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - WEBSOCKETS_ENABLED=true
       - WEB_SOCKETS=true
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
-      - ALLOWED_WEBSOCKET_ORIGINS=*
-      - DISABLE_ORIGIN_CHECK=true
-      - WEBSOCKET_ORIGIN=https://outline-docs.tusur.ru
-      - WEBSOCKET_TRANSPORTS=websocket,polling
+      - ALLOWED_WEBSOCKET_ORIGINS=https://outline-docs.tusur.ru
+      # - DISABLE_ORIGIN_CHECK=true
+      # - WEBSOCKET_ORIGIN=https://outline-docs.tusur.ru
+      # - WEBSOCKET_TRANSPORTS=websocket,polling
       - WEBSOCKET_PATH=/realtime
       - SOCKET_PATH=/realtime
-      - WEBSOCKET_ALLOWED_ORIGINS=https://outline-docs.tusur.ru
+      # - WEBSOCKET_ALLOWED_ORIGINS=https://outline-docs.tusur.ru
 
       # Настройки публичного доступа
       - FORCE_PUBLIC_SITE=true   # Включаем публичный доступ
@@ -49,7 +49,7 @@ services:
       - COOKIE_DOMAIN=outline-docs.tusur.ru
       - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
       - TRUST_PROXY=2
-      - FORCE_HTTPS=true
+      - FORCE_HTTPS=false
       - PROXY_SSL=true
       - PROXY=true
       - PROXY_TRUST=loopback,uniquelocal
