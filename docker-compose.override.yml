@@ -22,8 +22,8 @@ services:
       
       # КРИТИЧЕСКИ ВАЖНО: отключить принудительный HTTPS
       - FORCE_HTTPS=false
-      - WEB_SOCKETS=true
-      - WEBSOCKETS_ENABLED=true
+      - WEB_SOCKETS=false
+      - WEBSOCKETS_ENABLED=false
       
       # Настройки для работы за прокси
       - TRUST_PROXY=2

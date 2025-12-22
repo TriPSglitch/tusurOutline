@@ -29,12 +29,12 @@ services:
       - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - PUBLIC_URL=https://outline-docs.tusur.ru
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
-      - WEBSOCKETS_ENABLED=true
+      - WEBSOCKETS_ENABLED=false
       - PGSSLMODE=disable
       - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru
       - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
-      - WEB_SOCKETS=true
+      - WEB_SOCKETS=false
       - ALLOWED_WEBSOCKET_ORIGINS=https://outline-docs.tusur.ru
       # - DISABLE_ORIGIN_CHECK=true
       # - WEBSOCKET_TRANSPORTS=websocket,polling
