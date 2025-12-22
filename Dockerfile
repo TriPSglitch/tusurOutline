@@ -51,6 +51,7 @@ RUN chown -R node:node /opt/outline && \
     chmod -R 755 /opt/outline/build
 
 # Патчим сервер
+USER node
 RUN node /tmp/patch-server.js
 RUN node /tmp/patch-websocket-origin.js
 RUN node /tmp/socket-io-auth-patch.js
