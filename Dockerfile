@@ -45,6 +45,7 @@ COPY websocket-origin-fix.js /tmp/websocket-origin-fix.js
 COPY websocket-simple-fix.js /tmp/websocket-simple-fix.js
 COPY websocket-engine-fix.js /tmp/websocket-engine-fix.js
 COPY websocket-minimal.js /tmp/websocket-minimal.js
+COPY websocket-fix.js /tmp/websocket-fix.js
 
 # Сначала исправляем права
 RUN chown -R node:node /opt/outline && \
@@ -62,7 +63,7 @@ RUN node /tmp/websocket-fix-patch.js
 RUN node /tmp/websocket-origin-fix.js
 RUN node /tmp/websocket-simple-fix.js
 RUN node /tmp/websocket-engine-fix.js
-RUN node /tmp/websocket-minimal.js
+RUN node /tmp/websocket-fix.js
 
 # Возвращаемся к root для копирования entrypoint
 USER root
