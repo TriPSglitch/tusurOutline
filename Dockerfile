@@ -3,12 +3,12 @@ FROM outlinewiki/outline:latest
 # Устанавливаем зависимости для работы с Redis
 USER root
 RUN apt-get update && \
-    apt-get install -y python3 make g++ && \
+    apt-get install -y python3 make g++ net-tools && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Находим каталог Outline
-RUN echo "Outline найден в: /opt/ouline" && \
+RUN echo "Outline найден в: /opt/outline" && \
     echo "Содержимое в /opt/outline:" && \
     ls -la /opt/outline/
 
@@ -35,7 +35,7 @@ RUN echo '{\
 WORKDIR /opt/outline/plugins/tusur-warden
 RUN npm install ioredis @koa/router
 
-# Копируем patch файл
+# Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
 COPY patch-websocket-origin.js /tmp/patch-websocket-origin.js
 COPY socket-io-auth-patch.js /tmp/socket-io-auth-patch.js
@@ -45,12 +45,13 @@ COPY websocket-origin-fix.js /tmp/websocket-origin-fix.js
 COPY websocket-simple-fix.js /tmp/websocket-simple-fix.js
 COPY websocket-engine-fix.js /tmp/websocket-engine-fix.js
 
+# Сначала исправляем права
 RUN chown -R node:node /opt/outline && \
     chmod -R 755 /opt/outline && \
     chown -R node:node /opt/outline/build && \
     chmod -R 755 /opt/outline/build
 
-# Патчим сервер
+# Патчим сервер (от имени node)
 USER node
 RUN node /tmp/patch-server.js
 RUN node /tmp/patch-websocket-origin.js
@@ -61,16 +62,17 @@ RUN node /tmp/websocket-origin-fix.js
 RUN node /tmp/websocket-simple-fix.js
 RUN node /tmp/websocket-engine-fix.js
 
+# Возвращаемся к root для копирования entrypoint
 USER root
 
 # Копируем entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Возврашаем права пользователю outline
+# Возвращаем права пользователю outline
 RUN chown -R node:node /opt/outline/plugins/tusur-warden
 
-# Возвращаемся в рабчую директорию
+# Возвращаемся в рабочую директорию
 WORKDIR /opt/outline
 USER node
 
