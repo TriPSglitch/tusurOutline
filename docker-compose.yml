@@ -40,7 +40,6 @@ services:
       - WEBSOCKET_PATH=/realtime
       - SOCKET_PATH=/realtime
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
-      - DISABLE_ORIGIN_CHECK=true
 
       # Включение гостевого доступа (публичного) 
       - FORCE_PUBLIC_SITE=true
