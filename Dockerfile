@@ -42,7 +42,7 @@ WORKDIR /opt/outline
 
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
-#COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
+COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
 COPY patch-websocket-origin.js /tmp/patch-websocket-origin.js
 
 # # Сначала исправляем права
@@ -52,7 +52,7 @@ COPY patch-websocket-origin.js /tmp/patch-websocket-origin.js
 #     chmod -R 755 /opt/outline/build
 
 RUN node /tmp/patch-server.js
-#RUN node /tmp/fix-websocket-correct.js
+RUN node /tmp/fix-websocket-correct.js
 RUN node /tmp/patch-websocket-origin.js
 
 # # Возвращаемся к root для копирования entrypoint
