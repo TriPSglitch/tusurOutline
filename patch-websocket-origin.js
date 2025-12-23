@@ -1,130 +1,93 @@
 const fs = require('fs');
 
 const websocketFile = '/opt/outline/build/server/services/websockets.js';
-console.log('Patching Outline WebSocket file:', websocketFile);
-
-if (!fs.existsSync(websocketFile)) {
-    console.error('WebSocket file not found:', websocketFile);
-    process.exit(1);
-}
+console.log('Completely fixing WebSocket for TUSUR...');
 
 let code = fs.readFileSync(websocketFile, 'utf8');
 
-// Проверяем, не патчили ли уже
-if (code.includes('TUSUR_WEBSOCKET_FIX_APPLIED')) {
-    console.log('Already patched');
-    process.exit(0);
+// 1. Отключаем проверку origin в upgrade handler
+code = code.replace(
+  /if \(!req\.headers\.origin \|\| !_env\.default\.URL\.startsWith\(req\.headers\.origin\)\)\s*{/g,
+  'if (false) { // TUSUR: Origin check completely disabled'
+);
+
+// 2. Устанавливаем isCloudHosted = true в env
+const envCheck = /_env\.default\.isCloudHosted/;
+if (envCheck.test(code)) {
+  // Заменяем проверки на true
+  code = code.replace(
+    /_env\.default\.isCloudHosted \? "[^"]+" : _env\.default\.URL/g,
+    'true ? "*" : _env.default.URL'
+  );
 }
 
-// Находим функцию init
-const initFunctionMatch = code.match(/function init\([^)]*\)[^{]*{/);
-if (!initFunctionMatch) {
-    console.error('Could not find init function');
-    process.exit(1);
-}
-
-console.log('Found init function, patching...');
-
-// Добавляем middleware для обработки токенов из cookies
-const patchMiddleware = `
-// ======= TUSUR WEBSOCKET FIX ========
-console.log('TUSUR_WEBSOCKET_FIX_APPLIED: Adding token extraction for TUSUR');
-
-// Добавляем middleware для извлечения токена из cookies
-io.use((socket, next) => {
-    console.log(\`[TUSUR WebSocket] Connection attempt: \${socket.id}\`);
+// 3. Добавляем middleware в правильное место
+const ioConnectionPattern = /io\.on\("connection", async socket => {/;
+if (ioConnectionPattern.test(code)) {
+  // Находим функцию authenticate и вставляем middleware перед ней
+  const authenticateCall = /await authenticate\(socket\);/;
+  if (authenticateCall.test(code)) {
+    const middleware = `
+    // ======= TUSUR WEBSOCKET MIDDLEWARE ========
+    console.log(\`[TUSUR Socket.IO] Connection: \${socket.id}\`);
     
-    // 1. Проверяем токен в query (основной способ для клиента)
+    // Извлекаем токен из разных источников
     let token = socket.handshake.query.accessToken || 
                socket.handshake.query.token;
     
-    // 2. Если нет в query, проверяем cookies (для WebSocket из браузера)
+    // Из cookies
     if (!token && socket.handshake.headers.cookie) {
-        console.log('[TUSUR WebSocket] Checking cookies for token');
-        const cookies = {};
-        socket.handshake.headers.cookie.split(';').forEach(cookie => {
-            const parts = cookie.trim().split('=');
-            if (parts.length === 2) {
-                cookies[parts[0]] = parts[1];
-            }
-        });
-        
-        token = cookies.accessToken || cookies.token;
-        
-        if (token) {
-            console.log('[TUSUR WebSocket] Found token in cookies, adding to query');
-            // Добавляем токен в query для совместимости с Outline
-            socket.handshake.query.accessToken = token;
-        }
+      const cookies = {};
+      socket.handshake.headers.cookie.split(';').forEach(cookie => {
+        const parts = cookie.trim().split('=');
+        if (parts.length === 2) cookies[parts[0]] = parts[1];
+      });
+      token = cookies.accessToken;
     }
-    
-    console.log(\`[TUSUR WebSocket] Token found: \${token ? 'YES (' + token.substring(0, 20) + '...)' : 'NO'}\`);
     
     if (token) {
-        try {
-            // Декодируем токен для получения user ID
-            const jwt = require('jsonwebtoken');
-            const decoded = jwt.decode(token);
-            
-            if (decoded && decoded.id) {
-                socket.userId = decoded.id;
-                console.log(\`[TUSUR WebSocket] User authenticated: \${decoded.id}\`);
-                
-                // Также устанавливаем для совместимости с Outline
-                socket.handshake.auth = socket.handshake.auth || {};
-                socket.handshake.auth.userId = decoded.id;
-                socket.handshake.auth.token = token;
-            }
-        } catch (error) {
-            console.log('[TUSUR WebSocket] Token decode error:', error.message);
+      console.log(\`[TUSUR Socket.IO] Token found: \${token.substring(0, 20)}...\`);
+      
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.decode(token);
+        if (decoded && decoded.id) {
+          // Устанавливаем пользователя для socket
+          socket.client.user = { id: decoded.id };
+          console.log(\`[TUSUR Socket.IO] User authenticated: \${decoded.id}\`);
+          
+          // Также устанавливаем для Outline
+          socket.userId = decoded.id;
+          socket.user = { id: decoded.id };
         }
-    }
-    
-    next(); // Разрешаем соединение
-});
-// ======= END TUSUR WEBSOCKET FIX ========
-`;
-
-// Ищем место, где добавляются middleware (после создания io)
-const ioCreationPattern = /const io = createWebsocketServer\(server, services\);/;
-if (ioCreationPattern.test(code)) {
-    // Вставляем после создания io
-    code = code.replace(
-        ioCreationPattern,
-        `const io = createWebsocketServer(server, services);\n${patchMiddleware}`
-    );
-    console.log('Patched after io creation');
-} else {
-    // Ищем место после socket.io server creation
-    const socketIoPattern = /io\.on\(['"]connection['"]/;
-    if (socketIoPattern.test(code)) {
-        // Вставляем перед обработкой connection
-        code = code.replace(
-            socketIoPattern,
-            `${patchMiddleware}\n\n    io.on('connection'`
-        );
-        console.log('Patched before connection handler');
+      } catch (error) {
+        console.log('[TUSUR Socket.IO] Token decode error:', error.message);
+      }
     } else {
-        // Добавляем в конец функции
-        const initEndPattern = /return io;\s*}$/;
-        if (initEndPattern.test(code)) {
-            code = code.replace(
-                initEndPattern,
-                `${patchMiddleware}\n\n    return io;\n}`
-            );
-            console.log('Patched before return statement');
-        } else {
-            console.error('Could not find insertion point');
-            process.exit(1);
-        }
+      console.log('[TUSUR Socket.IO] No token found');
     }
+    // ======= END TUSUR WEBSOCKET MIDDLEWARE ========
+    `;
+    
+    // Вставляем middleware перед authenticate
+    code = code.replace(
+      authenticateCall,
+      `${middleware}\n    await authenticate(socket);`
+    );
+    console.log('Added TUSUR middleware before authenticate');
+  }
 }
 
-// Также отключаем проверку origin если есть
+// 4. Увеличиваем timeout для аутентификации
 code = code.replace(
-    /if \(!req\.headers\.origin \|\| !env\.URL\.startsWith\(req\.headers\.origin\)\)/g,
-    'if (false) // TUSUR: Origin check disabled'
+  /setTimeout\(function \(\) {\s+if \(!socket\.client\.user\)/g,
+  'setTimeout(function () {\n      if (!socket.client.user)'
+);
+
+code = code.replace(
+  /}, 1000\);/g,
+  '}, 5000); // TUSUR: Increased timeout for authentication'
 );
 
 fs.writeFileSync(websocketFile, code);
-console.log('WebSocket patched successfully');
+console.log('WebSocket completely patched for TUSUR');
