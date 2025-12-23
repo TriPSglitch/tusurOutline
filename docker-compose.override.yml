@@ -34,7 +34,7 @@ services:
       
       # CORS и Origin настройки
       - CORS_ORIGIN=https://outline-docs.tusur.ru
-      - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru,localhost
+      - ALLOWED_DOMAINS=*
       - ALLOWED_WEBSOCKET_ORIGINS=*
       
       # Настройки публичного доступа
@@ -49,7 +49,7 @@ services:
       - TUSUR_SSO_ENABLED=true
       - NODE_ENV=production
       - LOG_LEVEL=debug
-      - DEBUG=engine*
+      - DEBUG=engine*,socket*
 
       # Настройки домена и кук
       - SECURE_COOKIES=true

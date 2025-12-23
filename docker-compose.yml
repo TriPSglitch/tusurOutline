@@ -31,7 +31,7 @@ services:
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
       - WEBSOCKETS_ENABLED=true
       - PGSSLMODE=disable
-      - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru
+      - ALLOWED_DOMAINS=*
       - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
       - WEB_SOCKETS=true
@@ -70,7 +70,7 @@ services:
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
       - LOG_LEVEL=debug
-      - DEBUG=engine*
+      - DEBUG=engine*,socket*
 
     volumes:
       - outline_data:/var/lib/outline/data

@@ -1,111 +1,98 @@
-// // patch-websocket-origin.js - ТОЛЬКО отключаем проверку origin
-// const fs = require('fs');
+const { Server } = require('socket.io');
 
-// const websocketFile = '/opt/outline/build/server/services/websockets.js';
-// console.log('Checking WebSocket file:', websocketFile);
-
-// if (!fs.existsSync(websocketFile)) {
-//     console.log('WebSocket file not found, skipping origin patch');
-//     process.exit(0);
-// }
-
-// let code = fs.readFileSync(websocketFile, 'utf8');
-
-// // Проверяем, есть ли уже наш патч
-// if (code.includes('TUSUR: Origin check disabled')) {
-//     console.log('Origin check already disabled');
-//     process.exit(0);
-// }
-
-// // Ищем проверку origin - более конкретный паттерн
-// const originCheckPattern = /if\s*\(\s*!.*req\.headers\.origin.*startsWith.*/g;
-
-// if (originCheckPattern.test(code)) {
-//     console.log('Found origin check, disabling it...');
+function init(app, server, serviceNames) {
+    console.log('[TUSUR WebSocket] Initializing Socket.IO v4 server');
     
-//     // Восстанавливаем исходный код для поиска
-//     code = fs.readFileSync(websocketFile, 'utf8');
-    
-//     // Более безопасная замена - находим весь блок проверки origin
-//     const lines = code.split('\n');
-//     let inOriginCheck = false;
-//     let startLine = -1;
-//     let braceCount = 0;
-    
-//     for (let i = 0; i < lines.length; i++) {
-//         if (lines[i].includes('req.headers.origin') && lines[i].includes('startsWith')) {
-//             // Находим начало if
-//             for (let j = i; j >= 0; j--) {
-//                 if (lines[j].trim().startsWith('if')) {
-//                     startLine = j;
-//                     inOriginCheck = true;
-//                     break;
-//                 }
-//             }
-//         }
+    const io = new Server(server, {
+        path: '/realtime/',
+        cors: {
+            origin: function(origin, callback) {
+                console.log('[TUSUR CORS] Origin:', origin);
+                // Разрешаем все origin для тестирования
+                callback(null, true);
+            },
+            credentials: true,
+            methods: ['GET', 'POST', 'OPTIONS']
+        },
+        transports: ['websocket', 'polling'],
+        allowEIO3: true,
+        allowEIO4: true,
+        pingTimeout: 60000,
+        pingInterval: 25000,
+        connectTimeout: 45000,
+        // Критически важные настройки для engine.io
+        allowUpgrades: true,
+        perMessageDeflate: false,
+        httpCompression: false,
+        // Отключаем проверки
+        allowRequest: (req, callback) => {
+            console.log('[TUSUR allowRequest] Incoming WebSocket request');
+            console.log('[TUSUR allowRequest] URL:', req.url);
+            console.log('[TUSUR allowRequest] Headers:', req.headers);
+            callback(null, true); // Разрешаем все
+        }
+    });
+
+    // Middleware для логирования
+    io.use((socket, next) => {
+        console.log(`[TUSUR Socket.IO] New connection: ${socket.id}`);
+        console.log('[TUSUR Socket.IO] Query:', socket.handshake.query);
+        console.log('[TUSUR Socket.IO] Headers:', socket.handshake.headers);
         
-//         if (inOriginCheck) {
-//             // Считаем фигурные скобки
-//             braceCount += (lines[i].match(/{/g) || []).length;
-//             braceCount -= (lines[i].match(/}/g) || []).length;
-            
-//             // Заменяем условие
-//             if (lines[i].trim().startsWith('if')) {
-//                 lines[i] = 'if (false) { // TUSUR: Origin check disabled';
-//             }
-            
-//             // Если мы вышли из блока
-//             if (braceCount === 0 && i > startLine) {
-//                 inOriginCheck = false;
-//             }
-//         }
-//     }
-    
-//     code = lines.join('\n');
-//     fs.writeFileSync(websocketFile, code);
-//     console.log('Origin check disabled');
-// } else {
-//     console.log('No origin check found, trying alternative pattern...');
-    
-//     // Альтернативный паттерн для Outline
-//     const altPattern = /if\s*\(\s*origin\s*&&\s*!origin\.startsWith/;
-//     if (altPattern.test(code)) {
-//         console.log('Found alternative origin check, disabling it...');
+        // Извлекаем токен
+        const token = socket.handshake.query.accessToken || 
+                     socket.handshake.query.token ||
+                     (socket.handshake.headers.cookie && 
+                      socket.handshake.headers.cookie.match(/accessToken=([^;]+)/)?.[1]);
         
-//         code = code.replace(
-//             /if\s*\(\s*origin\s*&&\s*!origin\.startsWith\(/g,
-//             'if (false && origin && !origin.startsWith('
-//         );
+        if (token) {
+            console.log(`[TUSUR Socket.IO] Token found (${token.substring(0, 20)}...)`);
+            try {
+                const jwt = require('jsonwebtoken');
+                const decoded = jwt.decode(token);
+                if (decoded && decoded.id) {
+                    socket.userId = decoded.id;
+                    console.log(`[TUSUR Socket.IO] User ID: ${decoded.id}`);
+                }
+            } catch (e) {
+                console.log('[TUSUR Socket.IO] Token error:', e.message);
+            }
+        }
         
-//         fs.writeFileSync(websocketFile, code);
-//         console.log('Alternative origin check disabled');
-//     } else {
-//         console.log('No origin check patterns found');
-//     }
-// }
+        next();
+    });
 
-// Простейший WebSocket, который точно работает
-const fs = require('fs');
-const path = require('path');
+    io.on('connection', (socket) => {
+        console.log(`[TUSUR Socket.IO] Client connected: ${socket.id}`);
+        
+        // Отправляем подтверждение
+        socket.emit('connected', { 
+            sid: socket.id,
+            message: 'Connected to TUSUR Outline',
+            time: new Date().toISOString()
+        });
+        
+        socket.on('disconnect', (reason) => {
+            console.log(`[TUSUR Socket.IO] Client disconnected: ${socket.id}, reason: ${reason}`);
+        });
+        
+        // Ping/pong для keepalive
+        socket.on('ping', (data) => {
+            socket.emit('pong', { ...data, serverTime: Date.now() });
+        });
+        
+        // Обработка сообщений
+        socket.on('message', (data) => {
+            console.log(`[TUSUR Socket.IO] Message from ${socket.id}:`, data);
+            socket.emit('message', { 
+                echo: data, 
+                receivedAt: new Date().toISOString() 
+            });
+        });
+    });
 
-const file = '/opt/outline/build/server/websockets/index.js';
-const dir = path.dirname(file);
+    console.log('[TUSUR WebSocket] Socket.IO server initialized');
+    return io;
+}
 
-if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-const content = `
-module.exports = {
-    init: function(app, server, serviceNames) {
-        console.log('[MINIMAL WebSocket] WebSocket disabled for TUSUR testing');
-        return {
-            use: () => {},
-            on: () => {},
-            emit: () => {},
-            to: () => ({ emit: () => {} })
-        };
-    }
-};
-`;
-
-fs.writeFileSync(file, content);
-console.log('Created minimal WebSocket stub');
+module.exports = { init };
