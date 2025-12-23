@@ -1,52 +1,82 @@
-const fs = require('fs');
-const path = require('path');
+const http = require('http');
 
-console.log('Looking for engine.io configuration...');
+// Тестируем polling
+console.log('Testing Socket.IO polling...');
 
-// Ищем файлы engine.io
-const searchPaths = [
-  '/opt/outline/node_modules/engine.io/build/transports/websocket.js',
-  '/opt/outline/node_modules/engine.io/lib/transports/websocket.js'
-];
-
-for (const engineFile of searchPaths) {
-  if (fs.existsSync(engineFile)) {
-    console.log('Found engine.io WebSocket file:', engineFile);
-    
-    let code = fs.readFileSync(engineFile, 'utf8');
-    
-    // Отключаем все проверки
-    if (code.includes('function onUpgrade')) {
-      code = code.replace(
-        /function onUpgrade\(req, socket\)/g,
-        `function onUpgrade(req, socket) {
-        console.log('[TUSUR Engine.IO] Upgrade request:', req.url);
-        return true; // Всегда разрешаем`
-      );
-      fs.writeFileSync(engineFile, code);
-      console.log('Patched engine.io WebSocket handler');
-    }
-    break;
+const options = {
+  hostname: 'localhost',
+  port: 3000,
+  path: '/realtime/?EIO=4&transport=polling',
+  method: 'GET',
+  headers: {
+    'Cookie': 'accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBmNmEzNWMzLWE4NjUtNDM2My04MjQ0LTA5M2Y3ZWRiYmNlMCIsImV4cGlyZXNBdCI6IjIwMjUtMTItMjVUMDg6MjQ6MTAuMTcyWiIsInR5cGUiOiJzZXNzaW9uIiwiaWF0IjoxNzY2MDQ2MjUwfQ.DhxHl3mO4JbFSwee9jhcmBcrknW9g6HAZtlTArMXQLY'
   }
-}
+};
 
-// Также проверяем файл server
-const serverFile = '/opt/outline/build/server/services/websockets.js';
-if (fs.existsSync(serverFile)) {
-  let code = fs.readFileSync(serverFile, 'utf8');
+const req = http.request(options, (res) => {
+  console.log('Status:', res.statusCode);
+  console.log('Headers:', res.headers);
   
-  // Убираем middleware из engine.io
-  code = code.replace(
-    /engine\.applyMiddleware n°1/g,
-    'engine.applyMiddleware n°0 // TUSUR: No middleware'
-  );
+  let data = '';
+  res.on('data', (chunk) => {
+    data += chunk;
+  });
   
-  // Отключаем все middleware checks
-  code = code.replace(
-    /engine\.applyMiddleware/g,
-    '// TUSUR: middleware disabled'
-  );
+  res.on('end', () => {
+    console.log('Response:', data);
+    
+    // Пробуем извлечь sid для WebSocket
+    const match = data.match(/"sid":"([^"]+)"/);
+    if (match) {
+      const sid = match[1];
+      console.log('SID found:', sid);
+      
+      // Теперь пробуем WebSocket с этим SID
+      console.log('\nTrying WebSocket upgrade...');
+      testWebSocket(sid);
+    }
+  });
+});
+
+req.on('error', (e) => {
+  console.error('Error:', e);
+});
+
+req.end();
+
+function testWebSocket(sid) {
+  const wsOptions = {
+    hostname: 'localhost',
+    port: 3000,
+    path: `/realtime/?EIO=4&transport=websocket&sid=${sid}`,
+    headers: {
+      'Connection': 'Upgrade',
+      'Upgrade': 'websocket',
+      'Sec-WebSocket-Key': 'dGhlIHNhbXBsZSBub25jZQ==',
+      'Sec-WebSocket-Version': '13',
+      'Cookie': 'accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBmNmEzNWMzLWE4NjUtNDM2My04MjQ0LTA5M2Y3ZWRiYmNlMCIsImV4cGlyZXNBdCI6IjIwMjUtMTItMjVUMDg6MjQ6MTAuMTcyWiIsInR5cGUiOiJzZXNzaW9uIiwiaWF0IjoxNzY2MDQ2MjUwfQ.DhxHl3mO4JbFSwee9jhcmBcrknW9g6HAZtlTArMXQLY'
+    }
+  };
   
-  fs.writeFileSync(serverFile, code);
-  console.log('Disabled engine.io middleware');
+  const req = http.request(wsOptions, (res) => {
+    console.log('WebSocket upgrade response:', res.statusCode);
+    console.log('Headers:', res.headers);
+  });
+  
+  req.on('upgrade', (res, socket, head) => {
+    console.log('WebSocket upgrade successful!');
+    socket.write('2probe');
+    socket.on('data', (data) => {
+      console.log('WebSocket data:', data.toString());
+    });
+    socket.on('close', () => {
+      console.log('WebSocket closed');
+    });
+  });
+  
+  req.on('error', (e) => {
+    console.error('WebSocket error:', e);
+  });
+  
+  req.end();
 }
