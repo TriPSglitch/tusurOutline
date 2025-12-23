@@ -61,6 +61,12 @@ services:
       - COOKIE_DOMAIN=outline-docs.tusur.ru
       - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
 
+      # Отключаем все проверки WebSocket
+      - ENGINE_IO_DISABLE_MIDDLEWARE=true
+      - ENGINE_IO_ALLOW_UPGRADE=true
+      # Форсируем WebSocket без проверок
+      - SOCKETIO_TRANSPORTS='["websocket"]'
+
     extra_hosts:
       - "redis.tusur.ru:${TUSUR_REDIS_IP}"
 
