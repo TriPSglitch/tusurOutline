@@ -4,54 +4,58 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      # Основные настройки Outline
+      # Основные настройки
       - SECRET_KEY=${SECRET_KEY}
       - UTILS_SECRET=${UTILS_SECRET}
       - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
       - REDIS_URL=redis://redis:6379/0
       - REDIS_COLLABORATION_URL=redis://redis:6379/1
-      
-      # URL для сервера (HTTP так как SSL на Nginx)
+
+      # URL
       - URL=http://outline-docs.tusur.ru
       - PUBLIC_URL=https://outline-docs.tusur.ru
-      
-      # WebSocket URL для клиента (wss:// через Nginx)
+
+      # WebSocket URLs
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
       - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
-      
-      # КРИТИЧЕСКИ ВАЖНО: отключить принудительный HTTPS
+
+      # Отключаем принудительный HTTPS
       - FORCE_HTTPS=false
-      - WEB_SOCKETS=true
-      - WEBSOCKETS_ENABLED=true
-      - DISABLE_ORIGIN_CHECK=true
       
-      # Настройки для работы за прокси
+      # Включаем WebSocket
+      - WEBSOCKETS_ENABLED=true
+      - WEB_SOCKETS=true
+
+      # Proxy настройки
       - TRUST_PROXY=2
       - PROXY=true
       - PROXY_SSL=true
       - PROXY_TRUST=loopback,uniquelocal,172.18.0.0/16
-      
-      # CORS и Origin настройки
-      - CORS_ORIGIN=https://outline-docs.tusur.ru
+
+      # CORS и Origin
+      - CORS_ORIGIN=*
       - ALLOWED_DOMAINS=*
       - ALLOWED_WEBSOCKET_ORIGINS=*
-      
-      # Настройки публичного доступа
+      - DISABLE_ORIGIN_CHECK=true
+
+      # Публичный доступ
       - ALLOW_VIEWERS=true
       - ALLOW_SIGNUPS=true
       - FORCE_PUBLIC_SITE=true
       - ALLOW_PUBLIC_SHARING=true
 
-      # Настройки для TUSUR интеграции
+      # TUSUR интеграция
       - TUSUR_REDIS_HOST=redis.tusur.ru
       - TUSUR_REDIS_PORT=6379
       - TUSUR_SSO_ENABLED=true
+
+      # Debug
       - NODE_ENV=production
       - LOG_LEVEL=debug
-      - DEBUG=engine*,socket*
+      - DEBUG=engine*,socket.io*
 
-      # Настройки домена и кук
+      # Куки
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
       - COOKIE_DOMAIN=outline-docs.tusur.ru

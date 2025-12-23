@@ -27,12 +27,21 @@ else
 fi
 
 # Проверяем WebSocket файл
-if [ -f "/opt/outline/build/server/websockets/index.js" ]; then
+if [ -f "/opt/outline/build/server/services/websockets.js" ]; then
     echo "WebSocket file found"
-elif [ -f "/opt/outline/build/server/services/websockets.js" ]; then
-    echo "Legacy WebSocket file found"
+    # Проверяем патчи
+    if grep -q "TUSUR" "/opt/outline/build/server/services/websockets.js"; then
+        echo "TUSUR WebSocket patches detected"
+    else
+        echo "WARNING: No TUSUR patches in WebSocket file"
+    fi
+fi
+
+# Проверяем env.js
+if grep -q "isCloudHosted: true" "/opt/outline/build/server/env.js"; then
+    echo "env.js correctly configured for TUSUR"
 else
-    echo "WARNING: No WebSocket file found"
+    echo "WARNING: env.js not configured for TUSUR"
 fi
 
 # Запускаем Outline
