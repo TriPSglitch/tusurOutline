@@ -26,22 +26,33 @@ else
     exit 1
 fi
 
-# Проверяем WebSocket файл
+# WebSocket файл
 if [ -f "/opt/outline/build/server/services/websockets.js" ]; then
-    echo "WebSocket file found"
-    # Проверяем патчи
-    if grep -q "TUSUR" "/opt/outline/build/server/services/websockets.js"; then
-        echo "TUSUR WebSocket patches detected"
-    else
-        echo "WARNING: No TUSUR patches in WebSocket file"
-    fi
+    echo "WebSocket file: OK"
+    grep -q "TUSUR" "/opt/outline/build/server/services/websockets.js" && echo "  TUSUR patches: OK" || echo "  TUSUR patches: MISSING"
 fi
 
-# Проверяем env.js
-if grep -q "isCloudHosted: true" "/opt/outline/build/server/env.js"; then
-    echo "env.js correctly configured for TUSUR"
+# env.js
+if [ -f "/opt/outline/build/server/env.js" ]; then
+    echo "env.js file: OK"
+    grep -q "isCloudHosted: true" "/opt/outline/build/server/env.js" && echo "  Cloud hosted: OK" || echo "  Cloud hosted: NOT SET"
+fi
+
+# Engine.io
+if [ -f "/opt/outline/node_modules/engine.io/build/transports/websocket.js.backup" ]; then
+    echo "Engine.io backup: OK"
+fi
+
+# Проверяем WebSocket напрямую
+echo "=== Quick WebSocket test ==="
+echo "Polling test..."
+curl -s "http://localhost:3000/realtime/?EIO=4&transport=polling" > /tmp/polling_test.txt 2>&1
+if grep -q "sid" /tmp/polling_test.txt; then
+    echo "  Polling: WORKING"
+    SID=$(grep -o '"sid":"[^"]*"' /tmp/polling_test.txt | cut -d'"' -f4 | head -1)
+    echo "  SID: $SID"
 else
-    echo "WARNING: env.js not configured for TUSUR"
+    echo "  Polling: FAILED"
 fi
 
 # Запускаем Outline
