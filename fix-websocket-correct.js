@@ -154,6 +154,3 @@ if (fs.existsSync(file)) {
 // Записываем чистую версию
 fs.writeFileSync(file, cleanCode);
 console.log('File replaced with clean version');
-
-fs.writeFileSync(file, patchedCode);
-console.log('Minimal TUSUR patch applied successfully');
