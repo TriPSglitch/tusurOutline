@@ -1,82 +1,89 @@
-const http = require('http');
+const fs = require('fs');
 
-// Тестируем polling
-console.log('Testing Socket.IO polling...');
+const file = '/opt/outline/build/server/services/websockets.js';
+console.log('Applying nuclear WebSocket fix...');
 
-const options = {
-  hostname: 'localhost',
-  port: 3000,
-  path: '/realtime/?EIO=4&transport=polling',
-  method: 'GET',
-  headers: {
-    'Cookie': 'accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBmNmEzNWMzLWE4NjUtNDM2My04MjQ0LTA5M2Y3ZWRiYmNlMCIsImV4cGlyZXNBdCI6IjIwMjUtMTItMjVUMDg6MjQ6MTAuMTcyWiIsInR5cGUiOiJzZXNzaW9uIiwiaWF0IjoxNzY2MDQ2MjUwfQ.DhxHl3mO4JbFSwee9jhcmBcrknW9g6HAZtlTArMXQLY'
-  }
-};
+// Полностью переписываем файл
+const newCode = `
+"use strict";
 
-const req = http.request(options, (res) => {
-  console.log('Status:', res.statusCode);
-  console.log('Headers:', res.headers);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = init;
+
+function init(app, server, serviceNames) {
+  console.log('[TUSUR NUCLEAR] WebSocket service starting');
   
-  let data = '';
-  res.on('data', (chunk) => {
-    data += chunk;
+  // Простейший Socket.IO сервер без проверок
+  const io = require('socket.io')(server, {
+    path: '/realtime',
+    serveClient: false,
+    cookie: false,
+    pingInterval: 15000,
+    pingTimeout: 30000,
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+      credentials: true
+    },
+    allowEIO3: true,
+    allowEIO4: true,
+    transports: ['websocket', 'polling'],
+    allowUpgrades: true,
+    perMessageDeflate: false,
+    httpCompression: false
   });
-  
-  res.on('end', () => {
-    console.log('Response:', data);
+
+  // Middleware для TUSUR
+  io.use((socket, next) => {
+    console.log(\`[TUSUR Socket.IO] Connection: \${socket.id}\`);
     
-    // Пробуем извлечь sid для WebSocket
-    const match = data.match(/"sid":"([^"]+)"/);
-    if (match) {
-      const sid = match[1];
-      console.log('SID found:', sid);
-      
-      // Теперь пробуем WebSocket с этим SID
-      console.log('\nTrying WebSocket upgrade...');
-      testWebSocket(sid);
+    // Извлекаем токен
+    let token = socket.handshake.query.accessToken || 
+               socket.handshake.query.token;
+    
+    if (!token && socket.handshake.headers.cookie) {
+      const cookies = {};
+      socket.handshake.headers.cookie.split(';').forEach(cookie => {
+        const parts = cookie.trim().split('=');
+        if (parts.length === 2) cookies[parts[0]] = parts[1];
+      });
+      token = cookies.accessToken;
     }
-  });
-});
-
-req.on('error', (e) => {
-  console.error('Error:', e);
-});
-
-req.end();
-
-function testWebSocket(sid) {
-  const wsOptions = {
-    hostname: 'localhost',
-    port: 3000,
-    path: `/realtime/?EIO=4&transport=websocket&sid=${sid}`,
-    headers: {
-      'Connection': 'Upgrade',
-      'Upgrade': 'websocket',
-      'Sec-WebSocket-Key': 'dGhlIHNhbXBsZSBub25jZQ==',
-      'Sec-WebSocket-Version': '13',
-      'Cookie': 'accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBmNmEzNWMzLWE4NjUtNDM2My04MjQ0LTA5M2Y3ZWRiYmNlMCIsImV4cGlyZXNBdCI6IjIwMjUtMTItMjVUMDg6MjQ6MTAuMTcyWiIsInR5cGUiOiJzZXNzaW9uIiwiaWF0IjoxNzY2MDQ2MjUwfQ.DhxHl3mO4JbFSwee9jhcmBcrknW9g6HAZtlTArMXQLY'
+    
+    if (token) {
+      console.log(\`[TUSUR Socket.IO] Token found: \${token.substring(0, 20)}...\`);
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.decode(token);
+        if (decoded && decoded.id) {
+          socket.client.user = { id: decoded.id };
+          socket.userId = decoded.id;
+          console.log(\`[TUSUR Socket.IO] User authenticated: \${decoded.id}\`);
+        }
+      } catch (e) {
+        console.log('[TUSUR Socket.IO] Token error:', e.message);
+      }
     }
-  };
-  
-  const req = http.request(wsOptions, (res) => {
-    console.log('WebSocket upgrade response:', res.statusCode);
-    console.log('Headers:', res.headers);
+    
+    next();
   });
-  
-  req.on('upgrade', (res, socket, head) => {
-    console.log('WebSocket upgrade successful!');
-    socket.write('2probe');
-    socket.on('data', (data) => {
-      console.log('WebSocket data:', data.toString());
-    });
-    socket.on('close', () => {
-      console.log('WebSocket closed');
+
+  io.on('connection', (socket) => {
+    console.log(\`[TUSUR Socket.IO] Client connected: \${socket.id}\`);
+    
+    socket.on('disconnect', () => {
+      console.log(\`[TUSUR Socket.IO] Client disconnected: \${socket.id}\`);
     });
   });
-  
-  req.on('error', (e) => {
-    console.error('WebSocket error:', e);
-  });
-  
-  req.end();
+
+  console.log('[TUSUR NUCLEAR] WebSocket service ready');
+  return io;
 }
+
+module.exports = init;
+`;
+
+fs.writeFileSync(file, newCode);
+console.log('Nuclear WebSocket fix applied');
