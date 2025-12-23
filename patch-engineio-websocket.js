@@ -4,92 +4,86 @@ const path = require('path');
 
 console.log('Patching engine.io to allow direct WebSocket connections...');
 
-// Ищем файлы engine.io
-const possiblePaths = [
-  '/opt/outline/node_modules/engine.io/build/transports/websocket.js',
-  '/opt/outline/node_modules/engine.io/lib/transports/websocket.js',
-  '/opt/outline/node_modules/socket.io/node_modules/engine.io/build/transports/websocket.js'
+// Патчим engine.io server.js
+const serverFiles = [
+  '/opt/outline/node_modules/engine.io/build/server.js',
+  '/opt/outline/node_modules/engine.io/lib/server.js'
 ];
 
-let patched = false;
-
-for (const engineFile of possiblePaths) {
-  if (fs.existsSync(engineFile)) {
-    console.log('Found engine.io file:', engineFile);
+for (const serverFile of serverFiles) {
+  if (fs.existsSync(serverFile)) {
+    console.log('Found engine.io server file:', serverFile);
     
     // Создаем backup
-    const backupFile = engineFile + '.backup';
+    const backupFile = serverFile + '.original';
     if (!fs.existsSync(backupFile)) {
-      fs.copyFileSync(engineFile, backupFile);
+      fs.copyFileSync(serverFile, backupFile);
       console.log('Created backup:', backupFile);
     }
     
-    let code = fs.readFileSync(engineFile, 'utf8');
+    let code = fs.readFileSync(serverFile, 'utf8');
     
-    // Ищем функцию onUpgrade или аналогичную проверку
-    if (code.includes('function onUpgrade')) {
-      // Отключаем проверку upgrade
+    // КРИТИЧЕСКИ ВАЖНО: Отключаем проверку upgrade полностью
+    // Ищем и заменяем функцию verify
+    if (code.includes('function verify(req, upgrade, fn)')) {
+      console.log('Patching verify function...');
+      
+      // Заменяем всю функцию verify на всегда успешную проверку
       code = code.replace(
-        /function onUpgrade\(req, socket\)\s*{[\s\S]*?return/,
-        `function onUpgrade(req, socket) {
-          console.log('[TUSUR Engine.IO] WebSocket upgrade requested:', req.url);
-          // TUSUR: Always allow WebSocket upgrade
-          return true;`
+        /function verify\(req, upgrade, fn\)\s*{[\s\S]*?^\s*}/m,
+        `function verify(req, upgrade, fn) {
+          // TUSUR PATCH: Always allow upgrade for WebSocket
+          console.log('[TUSUR Engine.IO] Bypassing verify for WebSocket upgrade');
+          fn(null, true);
+        }`
       );
       
-      fs.writeFileSync(engineFile, code);
-      console.log('Patched onUpgrade function');
-      patched = true;
+      fs.writeFileSync(serverFile, code);
+      console.log('verify function patched');
     }
     
-    // Также ищем другие проверки
-    if (code.includes('invalid transport upgrade')) {
+    // Также патчим middleware проверку
+    if (code.includes('applyMiddleware')) {
       code = code.replace(
-        /invalid transport upgrade/g,
-        'TUSUR: transport upgrade allowed'
+        /applyMiddleware n°1/g,
+        'applyMiddleware n°0 // TUSUR: Disabled middleware check'
       );
-      fs.writeFileSync(engineFile, code);
-      console.log('Patched invalid transport upgrade message');
-      patched = true;
+      fs.writeFileSync(serverFile, code);
+      console.log('applyMiddleware patched');
     }
     
     break;
   }
 }
 
-if (!patched) {
-  console.log('Trying to patch engine.io server file...');
-  
-  // Попробуем найти server.js
-  const serverFiles = [
-    '/opt/outline/node_modules/engine.io/build/server.js',
-    '/opt/outline/node_modules/engine.io/lib/server.js'
-  ];
-  
-  for (const serverFile of serverFiles) {
-    if (fs.existsSync(serverFile)) {
-      console.log('Found engine.io server file:', serverFile);
-      let code = fs.readFileSync(serverFile, 'utf8');
+// Также патчим websocket.js транспорта
+const websocketFiles = [
+  '/opt/outline/node_modules/engine.io/build/transports/websocket.js',
+  '/opt/outline/node_modules/engine.io/lib/transports/websocket.js'
+];
+
+for (const wsFile of websocketFiles) {
+  if (fs.existsSync(wsFile)) {
+    console.log('Found WebSocket transport file:', wsFile);
+    
+    let code = fs.readFileSync(wsFile, 'utf8');
+    
+    // Отключаем проверку запроса в WebSocket транспорте
+    if (code.includes('function onUpgrade')) {
+      code = code.replace(
+        /function onUpgrade\(req, socket\)\s*{[\s\S]*?return false/m,
+        `function onUpgrade(req, socket) {
+          // TUSUR PATCH: Always allow WebSocket upgrade
+          console.log('[TUSUR WebSocket] Allowing upgrade');
+          return true`
+      );
       
-      // Ищем middleware проверки
-      if (code.includes('applyMiddleware')) {
-        // Отключаем middleware для WebSocket
-        code = code.replace(
-          /applyMiddleware n°1/g,
-          'applyMiddleware n°0 // TUSUR: No middleware for WebSocket'
-        );
-        
-        fs.writeFileSync(serverFile, code);
-        console.log('Patched applyMiddleware');
-        patched = true;
-      }
-      break;
+      fs.writeFileSync(wsFile, code);
+      console.log('WebSocket onUpgrade patched');
     }
+    
+    break;
   }
 }
 
-if (patched) {
-  console.log('Engine.io patched successfully');
-} else {
-  console.log('Could not find engine.io files to patch');
-}
+console.log('Engine.io patching complete');

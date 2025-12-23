@@ -43,18 +43,6 @@ if [ -f "/opt/outline/node_modules/engine.io/build/transports/websocket.js.backu
     echo "Engine.io backup: OK"
 fi
 
-# # Проверяем WebSocket напрямую
-# echo "=== Quick WebSocket test ==="
-# echo "Polling test..."
-# curl -s "http://localhost:3000/realtime/?EIO=4&transport=polling" > /tmp/polling_test.txt 2>&1
-# if grep -q "sid" /tmp/polling_test.txt; then
-#     echo "  Polling: WORKING"
-#     SID=$(grep -o '"sid":"[^"]*"' /tmp/polling_test.txt | cut -d'"' -f4 | head -1)
-#     echo "  SID: $SID"
-# else
-#     echo "  Polling: FAILED"
-# fi
-
 # Запускаем Outline
 echo "Запуск Outline..."
 exec node ./build/server/index.js
