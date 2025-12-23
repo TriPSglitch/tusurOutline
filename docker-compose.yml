@@ -35,11 +35,8 @@ services:
       - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
       - WEB_SOCKETS=true
-      - ALLOWED_WEBSOCKET_ORIGINS=https://outline-docs.tusur.ru
-      # - DISABLE_ORIGIN_CHECK=true
-      # - WEBSOCKET_TRANSPORTS=websocket,polling
-      # - WEBSOCKET_ORIGIN=https://outline-docs.tusur.ru
-      # - WEBSOCKET_ALLOWED_ORIGINS=https://outline-docs.tusur.ru
+      - ALLOWED_WEBSOCKET_ORIGINS=*
+      - DISABLE_ORIGIN_CHECK=true
       - WEBSOCKET_PATH=/realtime
       - SOCKET_PATH=/realtime
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru

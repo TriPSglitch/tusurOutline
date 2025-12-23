@@ -35,38 +35,24 @@ RUN echo '{\
 WORKDIR /opt/outline/plugins/tusur-warden
 RUN npm install ioredis @koa/router
 
+# Возвращаемся в основную директорию
+WORKDIR /opt/outline
+
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
 COPY patch-websocket-origin.js /tmp/patch-websocket-origin.js
-COPY socket-io-auth-patch.js /tmp/socket-io-auth-patch.js
-COPY websocket-token-patch.js /tmp/websocket-token-patch.js
-COPY websocket-fix-patch.js /tmp/websocket-fix-patch.js
-COPY websocket-origin-fix.js /tmp/websocket-origin-fix.js
-COPY websocket-simple-fix.js /tmp/websocket-simple-fix.js
-COPY websocket-engine-fix.js /tmp/websocket-engine-fix.js
-COPY websocket-minimal.js /tmp/websocket-minimal.js
-COPY websocket-fix.js /tmp/websocket-fix.js
 
-# Сначала исправляем права
-RUN chown -R node:node /opt/outline && \
-    chmod -R 755 /opt/outline && \
-    chown -R node:node /opt/outline/build && \
-    chmod -R 755 /opt/outline/build
+# # Сначала исправляем права
+# RUN chown -R node:node /opt/outline && \
+#     chmod -R 755 /opt/outline && \
+#     chown -R node:node /opt/outline/build && \
+#     chmod -R 755 /opt/outline/build
 
-# Патчим сервер (от имени node)
-USER node
 RUN node /tmp/patch-server.js
 RUN node /tmp/patch-websocket-origin.js
-RUN node /tmp/socket-io-auth-patch.js
-RUN node /tmp/websocket-token-patch.js
-RUN node /tmp/websocket-fix-patch.js
-RUN node /tmp/websocket-origin-fix.js
-RUN node /tmp/websocket-simple-fix.js
-RUN node /tmp/websocket-engine-fix.js
-RUN node /tmp/websocket-fix.js
 
-# Возвращаемся к root для копирования entrypoint
-USER root
+# # Возвращаемся к root для копирования entrypoint
+# USER root
 
 # Копируем entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

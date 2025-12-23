@@ -10,18 +10,6 @@ echo "GID: $(id -g)"
 # Проверяем права
 ls -la /opt/outline/build/server/websockets/ 2>/dev/null || echo "WebSocket directory not found"
 
-# Проверяем WebSocket настройки
-echo "Проверка WebSocket настроек..."
-env | grep -i "websocket\|socket\|collaboration\|realtime" | sort
-
-# Всегда применяем финальный патч WebSocket
-if [ -f "/tmp/websocket-engine-final.js" ]; then
-    echo "Применение финального WebSocket патча..."
-    node /tmp/websocket-engine-final.js
-else
-    echo "Финальный WebSocket патч не найден"
-fi
-
 # Проверяем существование плагина
 if [ -f "plugins/tusur-warden/index.js" ]; then
     echo "TUSUR плагин найден"
@@ -39,17 +27,12 @@ else
 fi
 
 # Проверяем WebSocket файл
-echo "Проверка WebSocket файла..."
-if [ -f "./build/server/websockets/index.js" ]; then
-    echo "WebSocket файл найден"
-    head -20 ./build/server/websockets/index.js
-    if node -c ./build/server/websockets/index.js; then
-        echo "Синтаксис WebSocket файла корректен"
-    else
-        echo "ОШИБКА: Синтаксис WebSocket файла некорректен!"
-    fi
+if [ -f "/opt/outline/build/server/websockets/index.js" ]; then
+    echo "WebSocket file found"
+elif [ -f "/opt/outline/build/server/services/websockets.js" ]; then
+    echo "Legacy WebSocket file found"
 else
-    echo "WebSocket файл не найден"
+    echo "WARNING: No WebSocket file found"
 fi
 
 # Запускаем Outline
