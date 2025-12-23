@@ -42,13 +42,13 @@ WORKDIR /opt/outline
 
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
-COPY restore-engine-io.js /tmp/restore-engine-io.js
+# COPY restore-engine-io.js /tmp/restore-engine-io.js
 COPY fix-env.js /tmp/fix-env.js
 COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
 # COPY patch-websocket-origin.js /tmp/patch-websocket-origin.js
 
 RUN node /tmp/patch-server.js
-RUN node /tmp/restore-engine-io.js
+# RUN node /tmp/restore-engine-io.js
 RUN node /tmp/fix-env.js
 RUN node /tmp/fix-websocket-correct.js
 # RUN node /tmp/patch-websocket-origin.js
