@@ -11,49 +11,90 @@ if (!fs.existsSync(file)) {
 
 let code = fs.readFileSync(file, 'utf8');
 
-// Проверяем, не сломан ли уже файл
-if (code.includes('Unexpected identifier') || code.includes('SyntaxError')) {
-    console.log('File appears to be broken, restoring from backup...');
-    const backup = file + '.backup';
-    if (fs.existsSync(backup)) {
-        code = fs.readFileSync(backup, 'utf8');
-        console.log('Restored from backup');
-    } else {
-        console.error('No backup found, need original file');
-        process.exit(1);
-    }
-}
+// Создаем резервную копию ПЕРЕД изменениями
+fs.writeFileSync(file + '.backup-pre', code);
 
 // ===== ТОЛЬКО НЕОБХОДИМЫЕ ИЗМЕНЕНИЯ =====
+
 // 1. Отключаем проверку origin (самая важная)
-code = code.replace(
-    /if \(!_env\.default\.isCloudHosted && \(!req\.headers\.origin \|\| !_env\.default\.URL\.startsWith\(req\.headers\.origin\)\)\)/g,
-    'if (false) // TUSUR: Origin check disabled'
-);
-
-// 2. Разрешаем все origins в CORS
-code = code.replace(
-    /origin: _env\.default\.isCloudHosted \? "[^"]+" : _env\.default\.URL/g,
-    'origin: "*" // TUSUR: Allow all origins'
-);
-
-// 3. Добавляем поддержку EIO4
-const ioServerMatch = code.match(/const io = new _socket\.default\.Server\(server, \{[\s\S]*?\}\);/);
-if (ioServerMatch) {
-    const ioInit = ioServerMatch[0];
-    if (!ioInit.includes('allowEIO3') && !ioInit.includes('allowEIO4')) {
-        const fixedIoInit = ioInit.replace(
-            /,\s*cors: \{[\s\S]*?\}\s*\}/,
-            `,\n    cors: {\n      origin: "*",\n      methods: ["GET", "POST"]\n    },\n    allowEIO3: true,\n    allowEIO4: true\n  }`
-        );
-        code = code.replace(ioInit, fixedIoInit);
-        console.log('Added EIO3/EIO4 support');
-    }
+const originCheck = /if \(!_env\.default\.isCloudHosted && \(!req\.headers\.origin \|\| !_env\.default\.URL\.startsWith\(req\.headers\.origin\)\)\)/g;
+if (originCheck.test(code)) {
+    code = code.replace(originCheck, 'if (false) // TUSUR: Origin check disabled');
+    console.log('1. Origin check disabled ✓');
+} else {
+    console.log('1. Origin check pattern not found');
 }
 
-// Сохраняем резервную копию
-fs.writeFileSync(file + '.backup', code);
+// 2. Разрешаем все origins в CORS
+const corsOrigin = /origin: _env\.default\.isCloudHosted \? "[^"]+" : _env\.default\.URL/g;
+if (corsOrigin.test(code)) {
+    code = code.replace(corsOrigin, 'origin: "*" // TUSUR: Allow all origins');
+    console.log('2. CORS origin set to * ✓');
+} else {
+    console.log('2. CORS origin pattern not found');
+}
+
+// 3. Безопасно добавляем поддержку EIO3/EIO4
+// Найдем создание io сервера более безопасным способом
+const ioPattern = /const io = new _socket\.default\.Server\(server, \{/;
+if (ioPattern.test(code)) {
+    // Найдем позицию
+    const ioIndex = code.indexOf('const io = new _socket.default.Server(server, {');
+    if (ioIndex !== -1) {
+        // Найдем закрывающую скобку этого объекта
+        let braceCount = 0;
+        let endIndex = ioIndex;
+        let found = false;
+        
+        for (let i = ioIndex; i < code.length; i++) {
+            if (code[i] === '{') braceCount++;
+            if (code[i] === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    endIndex = i;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        if (found) {
+            const ioConfig = code.substring(ioIndex, endIndex + 1);
+            
+            // Проверяем, есть ли уже allowEIO3/allowEIO4
+            if (!ioConfig.includes('allowEIO3') && !ioConfig.includes('allowEIO4')) {
+                // Добавляем перед закрывающей скобкой
+                const newIoConfig = ioConfig.replace(/\s*\}$/, ',\n    allowEIO3: true,\n    allowEIO4: true\n  }');
+                code = code.substring(0, ioIndex) + newIoConfig + code.substring(endIndex + 1);
+                console.log('3. Added EIO3/EIO4 support ✓');
+            } else {
+                console.log('3. EIO3/EIO4 already present');
+            }
+        } else {
+            console.log('3. Could not find end of io config object');
+        }
+    }
+}
 
 // Сохраняем исправленный файл
 fs.writeFileSync(file, code);
-console.log('=== WebSocket fix applied successfully ===');
+
+// Проверяем синтаксис
+console.log('\n=== Syntax check ===');
+try {
+    require('vm').createScript(code, file);
+    console.log('Syntax: OK ✓');
+} catch (error) {
+    console.error('Syntax error:', error.message);
+    console.log('Line where error occurred:', error.stack.match(/websockets\.js:(\d+)/)?.[1] || 'unknown');
+    
+    // Восстанавливаем из резервной копии
+    if (fs.existsSync(file + '.backup-pre')) {
+        console.log('Restoring from backup...');
+        const backup = fs.readFileSync(file + '.backup-pre', 'utf8');
+        fs.writeFileSync(file, backup);
+        console.log('Restored original file');
+    }
+}
+
+console.log('=== WebSocket fix completed ===');
