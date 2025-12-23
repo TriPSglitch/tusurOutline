@@ -1,9 +1,12 @@
 const fs = require('fs');
+const path = require('path');
 
-console.log('Replacing websockets.js with clean version...');
+const websocketFile = '/opt/outline/build/server/services/websockets.js';
+console.log('Fixing WebSocket correctly for TUSUR...');
 
-// Оригинальный код из Outline (можно получить из исходников)
-const cleanCode = `"use strict";
+// Полностью восстанавливаем оригинальную структуру с минимальными изменениями
+const fixedCode = `
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -40,10 +43,15 @@ function init(app, server, serviceNames) {
     pingInterval: 15000,
     pingTimeout: 30000,
     cors: {
-      // Included for completeness, though CORS does not apply to websocket transport.
-      origin: _env.default.isCloudHosted ? "*" : _env.default.URL,
-      methods: ["GET", "POST"]
-    }
+      // TUSUR FIX: Allow all origins for testing
+      origin: "*",
+      methods: ["GET", "POST"],
+      credentials: true
+    },
+    allowEIO3: true,
+    allowEIO4: true,
+    transports: ['websocket', 'polling'],
+    allowUpgrades: true
   });
 
   // Remove the upgrade handler that we just added when registering the IO engine
@@ -55,14 +63,16 @@ function init(app, server, serviceNames) {
     server.removeListener("upgrade", ioHandleUpgrade);
   }
   server.on("upgrade", function (req, socket, head) {
-    if (req.url?.startsWith(path) && ioHandleUpgrade) {
-      // For on-premise deployments, ensure the websocket origin matches the deployed URL.
-      // In cloud-hosted we support any origin for custom domains.
-      if (!_env.default.isCloudHosted && (!req.headers.origin || !_env.default.URL.startsWith(req.headers.origin))) {
-        socket.end(\`HTTP/1.1 400 Bad Request\\r\\n\`);
-        return;
+    console.log('[TUSUR UPGRADE] Upgrade request:', req.url, 'Origin:', req.headers.origin);
+    
+    // TUSUR FIX: Relaxed path check
+    if (req.url && (req.url.includes('/realtime') || req.url.startsWith('/realtime'))) {
+      // TUSUR FIX: Disable origin check completely
+      // Always allow WebSocket upgrade for TUSUR
+      console.log('[TUSUR UPGRADE] Allowing WebSocket upgrade');
+      if (ioHandleUpgrade) {
+        ioHandleUpgrade(req, socket, head);
       }
-      ioHandleUpgrade(req, socket, head);
       return;
     }
     if (serviceNames.includes("collaboration")) {
@@ -87,13 +97,55 @@ function init(app, server, serviceNames) {
       _Logger.default.error("Redis error in socketio adapter", err);
     }
   });
+  
+  // TUSUR FIX: Add middleware for token extraction
+  io.use((socket, next) => {
+    console.log(\`[TUSUR Socket.IO] Connection attempt: \${socket.id}\`);
+    
+    // Extract token from query
+    let token = socket.handshake.query.accessToken || 
+               socket.handshake.query.token;
+    
+    // Extract from cookies
+    if (!token && socket.handshake.headers.cookie) {
+      const cookies = {};
+      socket.handshake.headers.cookie.split(';').forEach(cookie => {
+        const parts = cookie.trim().split('=');
+        if (parts.length === 2) cookies[parts[0]] = parts[1];
+      });
+      token = cookies.accessToken || cookies.token;
+    }
+    
+    console.log(\`[TUSUR Socket.IO] Token found: \${token ? 'YES' : 'NO'}\`);
+    
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.decode(token);
+        if (decoded && decoded.id) {
+          // Store user info for authenticate function
+          socket.handshake.auth = socket.handshake.auth || {};
+          socket.handshake.auth.userId = decoded.id;
+          socket.handshake.auth.token = token;
+          console.log(\`[TUSUR Socket.IO] User ID found: \${decoded.id}\`);
+        }
+      } catch (error) {
+        console.log('[TUSUR Socket.IO] Token error:', error.message);
+      }
+    }
+    
+    next();
+  });
+  
   io.on("connection", async socket => {
+    console.log(\`[TUSUR Socket.IO] Client connected: \${socket.id}\`);
     _Metrics.default.increment("websockets.connected");
     _Metrics.default.gaugePerInstance("websockets.count", io.engine.clientsCount);
     socket.on("disconnect", async () => {
       _Metrics.default.increment("websockets.disconnected");
       _Metrics.default.gaugePerInstance("websockets.count", io.engine.clientsCount);
     });
+    // TUSUR FIX: Increase authentication timeout
     setTimeout(function () {
       // If the socket didn't authenticate after connection, disconnect it
       if (!socket.client.user) {
@@ -102,55 +154,106 @@ function init(app, server, serviceNames) {
         // @ts-expect-error should be boolean
         socket.disconnect("unauthorized");
       }
-    }, 1000);
+    }, 5000); // Increased from 1000 to 5000 ms
     try {
+      // TUSUR FIX: Pass our extracted auth to authenticate function
+      if (socket.handshake.auth && socket.handshake.auth.userId) {
+        // Pre-populate user for authenticate function
+        socket.client.user = { id: socket.handshake.auth.userId };
+      }
       await authenticate(socket);
     } catch (err) {
-      _Logger.default.error("Failed to authenticate websocket connection", err, {
-        socketId: socket.id
-      });
+      if (!(err instanceof _errors.AuthenticationError)) {
+        _Logger.default.error("websockets", err);
+      }
       socket.disconnect();
     }
   });
-  async function authenticate(socket) {
-    const token = socket.handshake.query.token || socket.handshake.auth?.token;
-    const userId = socket.handshake.auth?.userId;
-    const ip = socket.handshake.address;
-
-    // If a userId is already provided in handshake then we trust it.
-    if (userId) {
-      const user = await _models.User.findByPk(userId);
-      if (!user) {
-        throw _errors.AuthenticationError("User not found");
+  return io;
+}
+async function authenticate(socket) {
+  const cookies = _cookie.default.parse(socket.handshake.headers.cookie || "");
+  let accessToken;
+  let userId;
+  let tokenId;
+  try {
+    const decoded = (0, _jwt.decodeJwt)(cookies["accessToken"]);
+    if (decoded) {
+      accessToken = cookies["accessToken"];
+      userId = decoded.id;
+      tokenId = decoded.tokenId;
+    }
+  } catch (err) {}
+  if (!accessToken) {
+    // also try the authorization header
+    const authHeader = socket.handshake.headers.authorization;
+    if (authHeader) {
+      const parts = authHeader.split(" ");
+      if (parts.length === 2 && parts[0] === "Bearer") {
+        accessToken = parts[1];
+        try {
+          const decoded = (0, _jwt.decodeJwt)(accessToken);
+          if (decoded) {
+            userId = decoded.id;
+            tokenId = decoded.tokenId;
+          }
+        } catch (err) {}
       }
-      socket.client.user = user;
-      return;
-    }
-    if (!token) {
-      throw _errors.AuthenticationError("No token provided");
-    }
-    const response = await (0, _jwt.validateAuthenticationToken)(token, ip);
-    if (!response.user) {
-      throw _errors.AuthenticationError("Invalid token");
-    }
-    socket.client.user = response.user;
-    if (response.installation) {
-      socket.installation = response.installation;
     }
   }
-  return io;
-}`;
-
-const file = '/opt/outline/build/server/services/websockets.js';
-
-// Создаем backup
-const backup = file + '.original';
-if (fs.existsSync(file)) {
-    const current = fs.readFileSync(file, 'utf8');
-    fs.writeFileSync(backup, current);
-    console.log('Created backup:', backup);
+  // TUSUR FIX: Also check query parameters
+  if (!accessToken && socket.handshake.query.accessToken) {
+    accessToken = socket.handshake.query.accessToken;
+    try {
+      const decoded = (0, _jwt.decodeJwt)(accessToken);
+      if (decoded) {
+        userId = decoded.id;
+        tokenId = decoded.tokenId;
+      }
+    } catch (err) {}
+  }
+  if (!userId) {
+    throw new _errors.AuthenticationError("Unable to find JWT in request");
+  }
+  const user = await _models.User.findByPk(userId, {
+    include: [{
+      model: _models.Team,
+      as: "team",
+      required: true
+    }]
+  });
+  if (!user) {
+    throw new _errors.AuthenticationError("Invalid user");
+  }
+  (0, _policies.can)(user, "read", user);
+  socket.client.user = user;
+  // Add a listener for this user to the individual room so they can be notified
+  // when their account is required to re-authenticate.
+  socket.join(\`user-\${user.id}\`);
+  socket.join(\`team-\${user.teamId}\`);
+  // join rooms for any documents the user is already subscribed to in memory
+  // these will be different on each server instance
+  const processor = new _WebsocketsProcessor.default();
+  const subscriptions = processor.getSubscriptionsForUser(user.id);
+  subscriptions === null || subscriptions === void 0 ? void 0 : subscriptions.forEach(documentId => socket.join(documentId));
+  // broadcast to the individual room that this user just connected. Other
+  // servers in the cluster will be listening and can act on this information.
+  socket.broadcast.to(\`user-\${user.id}\`).emit("user.connect", {
+    userId: user.id,
+    socketId: socket.id,
+    serverId: _env.default.SERVER_ID
+  });
+  (0, _queues.schedule)({
+    name: "ValidateSSOAccessTask",
+    opts: {
+      attempts: 1
+    },
+    data: {
+      userId: user.id
+    }
+  });
 }
+`;
 
-// Записываем чистую версию
-fs.writeFileSync(file, cleanCode);
-console.log('File replaced with clean version');
+fs.writeFileSync(websocketFile, fixedCode);
+console.log('WebSocket file fixed correctly for TUSUR');
