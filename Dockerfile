@@ -59,8 +59,8 @@ RUN node /tmp/patch-server.js
 RUN node /tmp/fix-env.js
 # RUN node /tmp/fix-auth-syntax.js
 # RUN node /tmp/fix-websocket-correct.js
-RUN node /tmp/patch-websocket-final.js
-RUN node /tmp/patch-engineio-complete.js
+# RUN node /tmp/patch-websocket-final.js
+# RUN node /tmp/patch-engineio-complete.js
 # RUN node /tmp/fix-broken-socketio.js
 
 # Копируем entrypoint
