@@ -1,80 +1,116 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('=== Исправление TypeScript в server/index.js ===\n');
+console.log('=== ИСПРАВЛЕНИЕ ИМПОРТОВ В server/index.js ===\n');
 
 const indexPath = '/opt/outline/build/server/index.js';
 
 if (!fs.existsSync(indexPath)) {
-    console.log('❌ Файл index.js не существует!');
+    console.log('❌ Файл не существует!');
     process.exit(1);
 }
 
 console.log('Читаю файл...');
 let content = fs.readFileSync(indexPath, 'utf8');
+const lines = content.split('\n');
 
-console.log('Длина файла:', content.length, 'символов');
+console.log('Ищу проблемные импорты...');
 
-// Проверяем на наличие TypeScript синтаксиса
-const hasTypeScript = content.match(/:\s*(number|string|boolean|void|any|Promise)/);
-if (!hasTypeScript) {
-    console.log('✓ Файл не содержит TypeScript синтаксиса');
-    process.exit(0);
-}
+// Ищем строку с require('./ApiKey') - должно быть require('./models/ApiKey')
+let fixed = false;
 
-console.log('⚠ Обнаружен TypeScript синтаксис, преобразую в JavaScript...');
-
-// Создаем backup
-const backupPath = indexPath + '.before-ts-fix';
-fs.writeFileSync(backupPath, content);
-console.log('✓ Создан backup:', backupPath);
-
-// Простые замены TypeScript -> JavaScript
-let jsContent = content;
-
-// 1. Удаляем аннотации типов параметров функций
-jsContent = jsContent.replace(/(async\s+)?function\s+\w+\(([^)]+)\)/g, (match, async, params) => {
-    // Удаляем : type из параметров
-    const cleanParams = params.replace(/:\s*\w+/g, '');
-    return (async || '') + 'function(' + cleanParams + ')';
+const newLines = lines.map((line, index) => {
+    // Проверяем номер строки (вы сказали строка 216)
+    if (index === 215) { // индексы с 0
+        console.log(`Строка ${index + 1}: ${line}`);
+        
+        // Исправляем неправильные импорты
+        if (line.includes("require('./ApiKey')") || line.includes('require("./ApiKey")')) {
+            console.log('⚠ Найден неправильный импорт ApiKey');
+            console.log('Исправляю на require(\'./models/ApiKey\')...');
+            
+            fixed = true;
+            return line.replace(/require\('\.\/ApiKey'\)/g, "require('./models/ApiKey')")
+                       .replace(/require\("\.\/ApiKey"\)/g, 'require("./models/ApiKey")');
+        }
+    }
+    
+    // Также проверяем другие возможные неправильные импорты
+    const modelImports = ['Attachment', 'Collection', 'Document', 'Team', 'User'];
+    modelImports.forEach(model => {
+        if (line.includes(`require('./${model}')`) || line.includes(`require("./${model}")`)) {
+            console.log(`⚠ Найден неправильный импорт ${model}`);
+            console.log(`Исправляю на require('./models/${model}')...`);
+            
+            fixed = true;
+            return line.replace(new RegExp(`require\\('\\./${model}'\\)`, 'g'), `require('./models/${model}')`)
+                       .replace(new RegExp(`require\\("\\./${model}"\\)`, 'g'), `require("./models/${model}")`);
+        }
+    });
+    
+    return line;
 });
 
-// 2. Удаляем аннотации типов переменных (const x: type =)
-jsContent = jsContent.replace(/(const|let|var)\s+(\w+)\s*:\s*\w+/g, '$1 $2');
-
-// 3. Удаляем TypeScript импорты/экспорты типов
-jsContent = jsContent.replace(/import\s+type\s+[^;]+;/g, '');
-jsContent = jsContent.replace(/export\s+type\s+[^;]+;/g, '');
-
-// 4. Удаляем интерфейсы
-jsContent = jsContent.replace(/interface\s+\w+\s*{[^}]*}/g, '');
-
-// 5. Удаляем declare
-jsContent = jsContent.replace(/declare\s+/g, '');
-
-// 6. Простые замены common TypeScript patterns
-jsContent = jsContent.replace(/:\s*void/g, '');
-jsContent = jsContent.replace(/:\s*any/g, '');
-jsContent = jsContent.replace(/:\s*Promise/g, '');
-jsContent = jsContent.replace(/:\s*number/g, '');
-jsContent = jsContent.replace(/:\s*string/g, '');
-jsContent = jsContent.replace(/:\s*boolean/g, '');
-
-// 7. Удаляем пустые строки
-jsContent = jsContent.replace(/\n\s*\n\s*\n/g, '\n\n');
-
-console.log('Записываю исправленный файл...');
-fs.writeFileSync(indexPath, jsContent);
-
-console.log('\n✅ Преобразование завершено!');
-console.log('Длина после преобразования:', jsContent.length, 'символов');
-
-// Проверяем результат
-const newContent = fs.readFileSync(indexPath, 'utf8');
-const stillHasTS = newContent.match(/:\s*(number|string|boolean|void|any|Promise)/);
-
-if (stillHasTS) {
-    console.log('⚠ В файле еще остался TypeScript синтаксис');
+if (fixed) {
+    // Создаем backup
+    const backupPath = indexPath + '.before-fix';
+    fs.writeFileSync(backupPath, content);
+    console.log(`✓ Создан backup: ${backupPath}`);
+    
+    // Сохраняем исправленный файл
+    fs.writeFileSync(indexPath, newLines.join('\n'));
+    console.log('✅ Импорты исправлены!');
+    
+    // Показываем исправленные строки
+    console.log('\nИсправленные строки:');
+    newLines.forEach((line, index) => {
+        if (line !== lines[index]) {
+            console.log(`${index + 1}: ${line}`);
+        }
+    });
 } else {
-    console.log('✓ Файл теперь чистый JavaScript');
+    console.log('✓ Неправильных импортов не найдено');
+    
+    // Все равно проверяем все require
+    console.log('\nВсе require в файле:');
+    lines.forEach((line, index) => {
+        if (line.includes('require(')) {
+            console.log(`${index + 1}: ${line.trim()}`);
+        }
+    });
+}
+
+// Проверяем, есть ли models/ApiKey.js
+console.log('\nПроверка наличия models/ApiKey.js...');
+const apiKeyPath = '/opt/outline/build/server/models/ApiKey.js';
+
+if (fs.existsSync(apiKeyPath)) {
+    console.log('✓ models/ApiKey.js существует');
+} else {
+    console.log('❌ models/ApiKey.js не существует!');
+    console.log('Создаю заглушку...');
+    
+    const apiKeyStub = `"use strict";
+module.exports = (sequelize, DataTypes) => {
+  const ApiKey = sequelize.define('ApiKey', {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
+    },
+    name: DataTypes.STRING,
+    secret: DataTypes.STRING
+  });
+  
+  return ApiKey;
+};`;
+    
+    // Создаем директорию если нужно
+    const modelsDir = path.dirname(apiKeyPath);
+    if (!fs.existsSync(modelsDir)) {
+        fs.mkdirSync(modelsDir, { recursive: true });
+    }
+    
+    fs.writeFileSync(apiKeyPath, apiKeyStub);
+    console.log('✓ Создана заглушка models/ApiKey.js');
 }
