@@ -40,14 +40,19 @@ WORKDIR /opt/outline
 
 # Копируем исправленный патч WebSocket
 
+COPY restore-original-backups.js /tmp/restore-original-backups.js
+RUN node /tmp/restore-original-backups.js
+COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
+RUN node /tmp/fix-typescript-in-index.js
+
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
 # COPY fix-outline-routes.js /tmp/fix-outline-routes.js
 COPY fix-env.js /tmp/fix-env.js
 # COPY fix-auth-syntax.js /tmp/fix-auth-syntax.js
 # COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
-COPY patch-websocket-final.js /tmp/patch-websocket-final.js
-COPY patch-engineio-complete.js /tmp/patch-engineio-complete.js
+# COPY patch-websocket-final.js /tmp/patch-websocket-final.js
+# COPY patch-engineio-complete.js /tmp/patch-engineio-complete.js
 # COPY fix-broken-socketio.js /tmp/fix-broken-socketio.js
 
 RUN node /tmp/patch-server.js
