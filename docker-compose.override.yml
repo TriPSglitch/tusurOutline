@@ -12,7 +12,7 @@ services:
       - REDIS_COLLABORATION_URL=redis://redis:6379/1
 
       # URL
-      - URL=http://outline-docs.tusur.ru
+      - URL=https://outline-docs.tusur.ru
       - PUBLIC_URL=https://outline-docs.tusur.ru
 
       # WebSocket URLs
@@ -34,9 +34,9 @@ services:
       - PROXY_TRUST=loopback,uniquelocal,172.18.0.0/16
 
       # CORS и Origin
-      - CORS_ORIGIN=*
-      - ALLOWED_DOMAINS=*
-      - ALLOWED_WEBSOCKET_ORIGINS=*
+      - CORS_ORIGIN=https://outline-docs.tusur.ru
+      - ALLOWED_DOMAINS=outline-docs.tusur.ru
+      - ALLOWED_WEBSOCKET_ORIGINS=https://outline-docs.tusur.ru
       - DISABLE_ORIGIN_CHECK=true
 
       # Публичный доступ
