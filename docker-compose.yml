@@ -58,15 +58,15 @@ services:
       - PORT=3000
       - TRUST_PROXY=2
       - PROXY_SSL=true
-      - PROXY_TRUST=loopback,uniquelocal,172.18.0.0/16
+      - PROXY_TRUST=loopback,uniquelocal,172.18.0.0/16,172.16.2.126
       - PROXY=true
 
       - FILE_STORAGE=local
       - FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
       - MAX_IMAGE_UPLOAD_SIZE=10485760
 
-      - COOKIE_DOMAIN=outline-docs.tusur.ru
-      - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
+      - COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
       - LOG_LEVEL=debug

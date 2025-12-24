@@ -31,7 +31,7 @@ services:
       - TRUST_PROXY=2
       - PROXY=true
       - PROXY_SSL=true
-      - PROXY_TRUST=loopback,uniquelocal,172.18.0.0/16
+      - PROXY_TRUST=loopback,uniquelocal,172.18.0.0/16,172.16.2.126
 
       # CORS и Origin
       - CORS_ORIGIN=https://outline-docs.tusur.ru
@@ -58,8 +58,8 @@ services:
       # Куки
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
-      - COOKIE_DOMAIN=outline-docs.tusur.ru
-      - SESSION_COOKIE_DOMAIN=outline-docs.tusur.ru
+      - COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
 
       # Отключаем все проверки WebSocket
       - ENGINE_IO_DISABLE_MIDDLEWARE=true
