@@ -45,7 +45,7 @@ COPY patch-server.js /tmp/patch-server.js
 COPY fix-env.js /tmp/fix-env.js
 COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
 COPY patch-websocket-final.js /tmp/patch-websocket-final.js
-COPY patch-engineio-safe.js /tmp/patch-engineio-complete.js
+COPY patch-engineio-complete.js /tmp/patch-engineio-complete.js
 COPY fix-broken-socketio.js /tmp/fix-broken-socketio.js
 
 RUN node /tmp/patch-server.js
