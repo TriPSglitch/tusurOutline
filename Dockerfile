@@ -45,14 +45,14 @@ COPY patch-server.js /tmp/patch-server.js
 COPY fix-env.js /tmp/fix-env.js
 COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
 COPY patch-websocket-final.js /tmp/patch-websocket-final.js
-COPY patch-engineio-safe.js /tmp/patch-engineio-safe.js
+COPY patch-engineio-safe.js /tmp/patch-engineio-complete.js
 COPY fix-broken-socketio.js /tmp/fix-broken-socketio.js
 
 RUN node /tmp/patch-server.js
 RUN node /tmp/fix-env.js
 RUN node /tmp/fix-websocket-correct.js
 RUN node /tmp/patch-websocket-final.js
-RUN node /tmp/fix-broken-socketio.js
+RUN node /tmp/fix-broken-complete.js
 RUN node /tmp/patch-engineio-safe.js
 
 # Копируем entrypoint
