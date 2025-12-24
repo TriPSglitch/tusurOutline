@@ -42,7 +42,7 @@ WORKDIR /opt/outline
 
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
-COPY fix-outline-routes.js /tmp/fix-outline-routes.js
+# COPY fix-outline-routes.js /tmp/fix-outline-routes.js
 COPY fix-env.js /tmp/fix-env.js
 # COPY fix-auth-syntax.js /tmp/fix-auth-syntax.js
 # COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
@@ -51,7 +51,7 @@ COPY patch-engineio-complete.js /tmp/patch-engineio-complete.js
 # COPY fix-broken-socketio.js /tmp/fix-broken-socketio.js
 
 RUN node /tmp/patch-server.js
-RUN node /tmp/fix-outline-routes.js
+# RUN node /tmp/fix-outline-routes.js
 RUN node /tmp/fix-env.js
 # RUN node /tmp/fix-auth-syntax.js
 # RUN node /tmp/fix-websocket-correct.js
