@@ -1,65 +1,74 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('Adding GET endpoint for auth.config...');
+console.log('Simple fix for auth.js - adding GET endpoint...');
 
-const authApiFile = '/opt/outline/build/server/routes/api/auth/auth.js';
+const authFile = '/opt/outline/build/server/routes/api/auth/auth.js';
 
-if (!fs.existsSync(authApiFile)) {
+if (!fs.existsSync(authFile)) {
   console.error('auth.js not found');
   process.exit(1);
 }
 
-let content = fs.readFileSync(authApiFile, 'utf8');
+// Создаем backup
+fs.copyFileSync(authFile, authFile + '.backup-fix');
 
-// 1. Найдем POST "auth.config"
-const postConfigIndex = content.indexOf('router.post("auth.config"');
+let content = fs.readFileSync(authFile, 'utf8');
+
+// 1. Найдем POST "auth.config" и добавим GET версию ПРОСТЫМ способом
+const postConfigLine = 'router.post("auth.config", async ctx => {';
+const postConfigIndex = content.indexOf(postConfigLine);
+
 if (postConfigIndex === -1) {
   console.error('POST auth.config not found');
   process.exit(1);
 }
 
-console.log('Found POST auth.config at index', postConfigIndex);
+console.log('Found POST auth.config at line:', content.substring(0, postConfigIndex).split('\n').length);
 
-// 2. Найдем конец этого обработчика
-let handlerEnd = postConfigIndex;
+// Найдем где заканчивается эта функция (ищем соответствующую закрывающую скобку)
 let braceCount = 0;
-let inHandler = false;
+let inFunction = false;
+let functionEnd = -1;
 
 for (let i = postConfigIndex; i < content.length; i++) {
   if (content[i] === '{') {
     braceCount++;
-    inHandler = true;
+    inFunction = true;
   } else if (content[i] === '}') {
     braceCount--;
-    if (inHandler && braceCount === 0) {
-      handlerEnd = i + 1;
+    if (inFunction && braceCount === 0) {
+      functionEnd = i;
       break;
     }
   }
 }
 
-if (handlerEnd <= postConfigIndex) {
-  console.error('Could not find end of handler');
+if (functionEnd === -1) {
+  console.error('Could not find end of function');
   process.exit(1);
 }
 
-// 3. Извлечем обработчик
-const postHandler = content.substring(postConfigIndex, handlerEnd);
-console.log('POST handler length:', postHandler.length);
+// 2. Извлечем тело функции (без router.post строки)
+const functionStart = content.indexOf('{', postConfigIndex) + 1;
+const functionBody = content.substring(functionStart, functionEnd);
 
-// 4. Создаем GET handler на основе POST handler
-const getHandler = postHandler.replace(
-  'router.post("auth.config"',
-  'router.get("auth.config"'
-);
+// 3. Создаем GET версию
+const getVersion = `
+router.get("auth.config", async ctx => {
+${functionBody}
+});
+`;
 
-// 5. Вставим GET handler сразу после POST handler
-content = content.slice(0, handlerEnd) + '\n\n' + getHandler + content.slice(handlerEnd);
+// 4. Вставим GET версию сразу после POST версии
+content = content.slice(0, functionEnd + 1) + '\n\n' + getVersion + content.slice(functionEnd + 1);
 
-// 6. Также добавим простой GET для тестирования
-const simpleGetHandler = `
-// Simple test endpoint
+// 5. Также добавим простой тестовый endpoint в КОНЕЦ файла (перед module.exports)
+const exportIndex = content.lastIndexOf('module.exports');
+if (exportIndex !== -1) {
+  const testEndpoint = `
+
+// Test endpoint
 router.get('/test', async ctx => {
   ctx.body = {
     ok: true,
@@ -68,37 +77,25 @@ router.get('/test', async ctx => {
   };
 });
 `;
-
-// Вставим после GET auth.config
-const getConfigEnd = content.indexOf('router.get("auth.config"') + getHandler.length;
-content = content.slice(0, getConfigEnd) + '\n\n' + simpleGetHandler + content.slice(getConfigEnd);
-
-// 7. Сохраним
-fs.writeFileSync(authApiFile, content);
-console.log('✓ Added GET auth.config endpoint');
-console.log('✓ Added /test endpoint for testing');
-
-// 8. Также добавим в другие места для уверенности
-console.log('\nAdding health endpoint to API index...');
-
-const apiIndexFile = '/opt/outline/build/server/routes/api/index.js';
-if (fs.existsSync(apiIndexFile)) {
-  let apiIndexContent = fs.readFileSync(apiIndexFile, 'utf8');
   
-  // Найдем где добавить (после middlewares, перед plugin hooks)
-  const middlewaresEnd = apiIndexContent.indexOf('// Register plugin API routes');
-  if (middlewaresEnd !== -1) {
-    const healthRoute = `
-// Health check endpoint
-router.get('/health', async ctx => {
-  ctx.body = { ok: true, service: 'api' };
-});
-`;
-    
-    apiIndexContent = apiIndexContent.slice(0, middlewaresEnd) + healthRoute + apiIndexContent.slice(middlewaresEnd);
-    fs.writeFileSync(apiIndexFile, apiIndexContent);
-    console.log('✓ Added /api/health endpoint');
-  }
+  content = content.slice(0, exportIndex) + testEndpoint + '\n\n' + content.slice(exportIndex);
 }
 
-console.log('\n=== Fix complete ===');
+// 6. Сохраним
+fs.writeFileSync(authFile, content);
+console.log('✓ Added GET auth.config endpoint');
+console.log('✓ Added /test endpoint');
+
+// 7. Проверим синтаксис
+try {
+  require(authFile);
+  console.log('✓ Syntax check passed');
+} catch (err) {
+  console.error('✗ Syntax error:', err.message);
+  
+  // Восстановим из backup
+  fs.copyFileSync(authFile + '.backup-fix', authFile);
+  console.log('✓ Restored from backup');
+}
+
+console.log('\n=== Simple fix complete ===');
