@@ -39,8 +39,8 @@ RUN npm install ioredis @koa/router
 WORKDIR /opt/outline
 
 # Копируем исправленный патч WebSocket
-COPY restore-outline-routes.js /tmp/restore-outline-routes.js
-RUN node /tmp/restore-outline-routes.js
+COPY fix-outline-routes.js /tmp/fix-outline-routes.js
+RUN node /tmp/fix-outline-routes.js
 COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
 RUN node /tmp/fix-typescript-in-index.js
 
