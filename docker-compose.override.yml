@@ -22,7 +22,7 @@ services:
 
       # Отключаем принудительный HTTPS
       - FORCE_HTTPS=false
-      
+
       # Включаем WebSocket
       - WEBSOCKETS_ENABLED=true
       - WEB_SOCKETS=true

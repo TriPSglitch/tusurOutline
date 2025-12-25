@@ -183,11 +183,11 @@ class AuthRoutes {
         }
 
         ctx.body = {
-        cookies: cookies,
-        decodedToken: decodedToken,
-        ctxStateUser: ctx.state.user ? {
-          id: ctx.state.user.id,
-          email: ctx.state.user.email
+          cookies: cookies,
+          decodedToken: decodedToken,
+          ctxStateUser: ctx.state.user ? {
+            id: ctx.state.user.id,
+            email: ctx.state.user.email
           } : null,
           headers: {
             authorization: ctx.get('Authorization'),
@@ -198,26 +198,26 @@ class AuthRoutes {
       });
 
       this.router.get('/auth/tusur/session-info', async (ctx) => {
-          ctx.body = {
-              sessionExists: !!ctx.session,
-              session: ctx.session ? {
-                  userId: ctx.session.userId,
-                  userEmail: ctx.session.userEmail,
-                  passport: ctx.session.passport,
-                  cookie: ctx.session.cookie
-              } : null,
-              ctxState: {
-                  user: ctx.state.user ? {
-                      id: ctx.state.user.id,
-                      email: ctx.state.user.email
-                  } : null,
-                  authToken: ctx.state.authToken
-              },
-              cookies: {
-                  accessToken: ctx.cookies.get('accessToken'),
-                  connectSid: ctx.cookies.get('connect.sid')
-              }
-          };
+        ctx.body = {
+          sessionExists: !!ctx.session,
+          session: ctx.session ? {
+            userId: ctx.session.userId,
+            userEmail: ctx.session.userEmail,
+            passport: ctx.session.passport,
+            cookie: ctx.session.cookie
+          } : null,
+          ctxState: {
+            user: ctx.state.user ? {
+              id: ctx.state.user.id,
+              email: ctx.state.user.email
+            } : null,
+            authToken: ctx.state.authToken
+          },
+          cookies: {
+            accessToken: ctx.cookies.get('accessToken'),
+            connectSid: ctx.cookies.get('connect.sid')
+          }
+        };
       });
 
       this.router.get('/auth/tusur/check-outline-auth', async (ctx) => {
@@ -329,88 +329,88 @@ class AuthRoutes {
           ctx.body = { error: error.message };
         }
       });
-/*
-      this.router.get('/auth/tusur/logout', async (ctx) => {
-        console.log('[TUSUR Logout] Начало процедуры выхода');
-
-        try {
-          // 1. Получаем session_id из куки warden
-          const sessionId = ctx.cookies.get('_session_id');
-          const accessToken = ctx.cookies.get('accessToken');
-          const connectSid = ctx.cookies.get('connect.sid');
-
-          console.log('[TUSUR Logout] Session ID:', sessionId ? 'присутствует' : 'отсутствует');
-          console.log('[TUSUR Logout] Access Token:', accessToken ? 'присутствует' : 'отсутствует');
-          console.log('[TUSUR Logout] Connect SID:', connectSid ? 'присутствует' : 'отсутствует');
-
-          // 2. Отправляем запрос на выход в warden (если есть session_id)
-          if (sessionId) {
-            try {
-              console.log('[TUSUR Logout] Отправляем запрос на выход в warden');
-              // Для DELETE запроса нужен fetch с настройками
-              const fetch = require('node-fetch');
-
-              const response = await fetch('https://profile.tusur.ru/users/sign_out', {
-                method: 'GET', // Некоторые системы используют GET для выхода
-                headers: {
-                  'Cookie': `_session_id=${sessionId}`
-                },
-                redirect: 'manual' // Не следовать редиректам
-              });
-
-              console.log('[TUSUR Logout] Ответ от warden:', response.status);
-            } catch (wardenError) {
-              console.error('[TUSUR Logout] Ошибка при выходе из warden:', wardenError.message);
-            }
-          }
-
-          // 3. Очищаем все куки Outline
-          const cookieOptions = {
-            path: '/',
-            domain: '.outline-docs.tusur.ru',
-            httpOnly: false
-          };
-
-          // Очищаем accessToken
-          ctx.cookies.set('accessToken', null, {
-            ...cookieOptions,
-            expires: new Date(0)
-          });
-
-          // Очищаем connect.sid (сессия Outline)
-          ctx.cookies.set('connect.sid', null, {
-            ...cookieOptions,
-            httpOnly: true,
-            expires: new Date(0)
-          });
-
-          // Очищаем куки warden
-          ctx.cookies.set('_session_id', null, {
-            ...cookieOptions,
-            expires: new Date(0)
-          });
-
-          // Очищаем другие возможные куки
-          ctx.cookies.set('userId', null, {
-            ...cookieOptions,
-            expires: new Date(0)
-          });
-
-          // 4. Очищаем сессию (если есть)
-          if (ctx.session) {
-            ctx.session = null;
-          }
-
-          // 5. Редирект на warden для полноценного выхода или на главную
-          const returnTo = ctx.query.return_to || 'https://outline-docs.tusur.ru';
-
-          console.log('[TUSUR Logout] Выход завершен, редирект на:', returnTo);
-        } catch (error) {
-          console.error('[TUSUR Logout] Критическая ошибка:', error);
-          ctx.redirect('/');
-        }
-      });
-*/
+      /*
+            this.router.get('/auth/tusur/logout', async (ctx) => {
+              console.log('[TUSUR Logout] Начало процедуры выхода');
+      
+              try {
+                // 1. Получаем session_id из куки warden
+                const sessionId = ctx.cookies.get('_session_id');
+                const accessToken = ctx.cookies.get('accessToken');
+                const connectSid = ctx.cookies.get('connect.sid');
+      
+                console.log('[TUSUR Logout] Session ID:', sessionId ? 'присутствует' : 'отсутствует');
+                console.log('[TUSUR Logout] Access Token:', accessToken ? 'присутствует' : 'отсутствует');
+                console.log('[TUSUR Logout] Connect SID:', connectSid ? 'присутствует' : 'отсутствует');
+      
+                // 2. Отправляем запрос на выход в warden (если есть session_id)
+                if (sessionId) {
+                  try {
+                    console.log('[TUSUR Logout] Отправляем запрос на выход в warden');
+                    // Для DELETE запроса нужен fetch с настройками
+                    const fetch = require('node-fetch');
+      
+                    const response = await fetch('https://profile.tusur.ru/users/sign_out', {
+                      method: 'GET', // Некоторые системы используют GET для выхода
+                      headers: {
+                        'Cookie': `_session_id=${sessionId}`
+                      },
+                      redirect: 'manual' // Не следовать редиректам
+                    });
+      
+                    console.log('[TUSUR Logout] Ответ от warden:', response.status);
+                  } catch (wardenError) {
+                    console.error('[TUSUR Logout] Ошибка при выходе из warden:', wardenError.message);
+                  }
+                }
+      
+                // 3. Очищаем все куки Outline
+                const cookieOptions = {
+                  path: '/',
+                  domain: '.outline-docs.tusur.ru',
+                  httpOnly: false
+                };
+      
+                // Очищаем accessToken
+                ctx.cookies.set('accessToken', null, {
+                  ...cookieOptions,
+                  expires: new Date(0)
+                });
+      
+                // Очищаем connect.sid (сессия Outline)
+                ctx.cookies.set('connect.sid', null, {
+                  ...cookieOptions,
+                  httpOnly: true,
+                  expires: new Date(0)
+                });
+      
+                // Очищаем куки warden
+                ctx.cookies.set('_session_id', null, {
+                  ...cookieOptions,
+                  expires: new Date(0)
+                });
+      
+                // Очищаем другие возможные куки
+                ctx.cookies.set('userId', null, {
+                  ...cookieOptions,
+                  expires: new Date(0)
+                });
+      
+                // 4. Очищаем сессию (если есть)
+                if (ctx.session) {
+                  ctx.session = null;
+                }
+      
+                // 5. Редирект на warden для полноценного выхода или на главную
+                const returnTo = ctx.query.return_to || 'https://outline-docs.tusur.ru';
+      
+                console.log('[TUSUR Logout] Выход завершен, редирект на:', returnTo);
+              } catch (error) {
+                console.error('[TUSUR Logout] Критическая ошибка:', error);
+                ctx.redirect('/');
+              }
+            });
+      */
       console.log('[TUSUR Auth Routes] Добавлено 9 маршрутов');
     } catch (error) {
       console.error('[TUSUR Auth Routes] Ошибка добавления маршрутов:', error.message);

@@ -3,14 +3,14 @@ FROM outlinewiki/outline:latest
 # Устанавливаем зависимости для работы с Redis
 USER root
 RUN apt-get update && \
-    apt-get install -y python3 make g++ net-tools && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+  apt-get install -y python3 make g++ net-tools && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 # Находим каталог Outline
 RUN echo "Outline найден в: /opt/outline" && \
-    echo "Содержимое в /opt/outline:" && \
-    ls -la /opt/outline/
+  echo "Содержимое в /opt/outline:" && \
+  ls -la /opt/outline/
 
 # Создаем директорию для плагина
 RUN mkdir -p /opt/outline/plugins/tusur-warden
@@ -29,7 +29,7 @@ RUN echo '{\
   "name": "outline-tusur-warden-plugin",\
   "version": "1.0.0",\
   "main": "index.js"\
-}' > /opt/outline/plugins/tusur-warden/package.json
+  }' > /opt/outline/plugins/tusur-warden/package.json
 
 # Устанавливаем зависимости плагина
 WORKDIR /opt/outline/plugins/tusur-warden

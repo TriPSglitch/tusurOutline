@@ -41,7 +41,7 @@ services:
       - SOCKET_PATH=/realtime
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
 
-      # Включение гостевого доступа (публичного) 
+      # Включение гостевого доступа (публичного)
       - FORCE_PUBLIC_SITE=true
       - FEATURE_PUBLIC_SHARING=true
 

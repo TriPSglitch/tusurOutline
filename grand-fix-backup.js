@@ -32,7 +32,7 @@ if (!indexRestored) {
         '/opt/outline/index.js',
         '/opt/outline/build/index.js'
     ];
-    
+
     for (const possiblePath of possiblePaths) {
         if (fs.existsSync(possiblePath)) {
             fs.copyFileSync(possiblePath, indexPath);
@@ -109,7 +109,7 @@ if (fs.existsSync(modelsPath)) {
         console.log('   Проверяем файлы в models...');
         const modelFiles = fs.readdirSync(modelsPath).filter(f => f.endsWith('.js'));
         console.log(`   Найдено ${modelFiles.length} файлов моделей`);
-        
+
         // Проверяем наличие критических моделей
         const criticalModels = ['ApiKey.js', 'index.js'];
         criticalModels.forEach(model => {
@@ -132,7 +132,7 @@ if (fs.existsSync(routesPath)) {
     // Восстановление routes/index.js
     const routesIndexPath = path.join(routesPath, 'index.js');
     const routesIndexBackup = routesIndexPath + '.backup';
-    
+
     if (fs.existsSync(routesIndexBackup)) {
         fs.copyFileSync(routesIndexBackup, routesIndexPath);
         console.log('   ✓ routes/index.js восстановлен из backup');
@@ -141,7 +141,7 @@ if (fs.existsSync(routesPath)) {
     } else {
         console.log('   ⚠ routes/index.js отсутствует');
     }
-    
+
     // Восстановление auth.js если есть backup
     const authPath = path.join(routesPath, 'api/auth/auth.js');
     const authBackup = authPath + '.backup';
@@ -190,7 +190,7 @@ console.log('\n7. Проверка server/index.js...');
 if (fs.existsSync(indexPath)) {
     try {
         const content = fs.readFileSync(indexPath, 'utf8');
-        
+
         // Проверяем базовые вещи
         const checks = [
             { name: 'Начинается с "use strict"', check: content.startsWith('"use strict"') || content.includes("'use strict'") },
@@ -199,17 +199,17 @@ if (fs.existsSync(indexPath)) {
             { name: 'Есть функция start', check: content.includes('function start') || content.includes('async function start') },
             { name: 'Есть module.exports', check: content.includes('module.exports') }
         ];
-        
+
         checks.forEach(check => {
             console.log(`   ${check.name}: ${check.check ? '✓' : '✗'}`);
         });
-        
+
         // Проверяем на наличие TypeScript синтаксиса
         if (content.includes(':') && content.includes('async function')) {
             console.log('   ⚠ ВНИМАНИЕ: Возможен TypeScript синтаксис в файле!');
             console.log('   Это может вызвать ошибку "Unexpected token \':\'"');
         }
-        
+
     } catch (error) {
         console.log(`   ❌ Ошибка чтения файла: ${error.message}`);
     }
