@@ -84,12 +84,12 @@ class WardenMiddleware {
         return next();
       }
 
-      console.log(`[TUSUR Debug] Path: ${ctx.path}, Method: ${ctx.method}`);
-      console.log(`[TUSUR Debug] Cookies:`, {
-        accessToken: ctx.cookies.get('accessToken') ? 'present' : 'missing',
-        connectSid: ctx.cookies.get('connect.sid') ? 'present' : 'missing',
-        sessionId: ctx.cookies.get('_session_id') ? 'present' : 'missing'
-      });
+      // console.log(`[TUSUR Debug] Path: ${ctx.path}, Method: ${ctx.method}`);
+      // console.log(`[TUSUR Debug] Cookies:`, {
+      //   accessToken: ctx.cookies.get('accessToken') ? 'present' : 'missing',
+      //   connectSid: ctx.cookies.get('connect.sid') ? 'present' : 'missing',
+      //   sessionId: ctx.cookies.get('_session_id') ? 'present' : 'missing'
+      // });
 
       // Проверьте заголовки авторизации
       console.log(`[TUSUR Debug] Headers:`, {
@@ -194,7 +194,7 @@ class WardenMiddleware {
       const isPublicPath = this.isPathPublic(path, publicPaths);
 
       if (isPublicPath) {
-        console.log(`[TUSUR Auth] Публичный путь: ${path}`);
+        // console.log(`[TUSUR Auth] Публичный путь: ${path}`);
         return next();
       }
 
