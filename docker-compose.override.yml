@@ -17,11 +17,12 @@ services:
 
       # WebSocket URLs
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
-      - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
-      - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
+      - COLLABORATION_URL=wss://outline-docs.tusur.ru
+      - REALTIME_URL=wss://outline-docs.tusur.ru
+      - SOCKET_PATH=/realtime
 
       # Отключаем принудительный HTTPS
-      - FORCE_HTTPS=false
+      - FORCE_HTTPS=true
 
       # Включаем WebSocket
       - WEBSOCKETS_ENABLED=true

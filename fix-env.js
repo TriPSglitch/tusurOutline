@@ -1,42 +1,58 @@
-
 const fs = require('fs');
+const path = require('path');
 
-console.log('Fixing env.js for TUSUR deployment...');
+console.log('Применение чистого WebSocket фикса для TUSUR...');
 
-const envFile = '/opt/outline/build/server/env.js';
-
-if (!fs.existsSync(envFile)) {
-  console.error('env.js not found:', envFile);
-  process.exit(1);
+// 1. Патчим env.js для правильного URL
+const envPath = path.join(__dirname, 'build/server/env.js');
+if (fs.existsSync(envPath)) {
+    let envContent = fs.readFileSync(envPath, 'utf8');
+    
+    // Гарантируем правильный URL для WebSocket
+    if (!envContent.includes('URL=https://outline-docs.tusur.ru')) {
+        envContent = envContent.replace(
+            /(URL=)([^\n]*)/,
+            'URL=https://outline-docs.tusur.ru'
+        );
+    }
+    
+    // Отключаем облачные ограничения
+    if (envContent.includes('DEPLOYMENT')) {
+        envContent = envContent.replace(
+            /(DEPLOYMENT=)([^\n]*)/,
+            'DEPLOYMENT=self-hosted'
+        );
+    } else {
+        envContent += '\nDEPLOYMENT=self-hosted\n';
+    }
+    
+    fs.writeFileSync(envPath, envContent);
+    console.log('✓ env.js обновлен');
 }
 
-let code = fs.readFileSync(envFile, 'utf8');
-
-// Устанавливаем isCloudHosted = true
-code = code.replace(
-  /isCloudHosted:\s*[^,}]+/,
-  'isCloudHosted: true // TUSUR: Force cloud hosted mode to disable origin checks'
-);
-
-// Устанавливаем URL из environment
-code = code.replace(
-  /URL:\s*"[^"]*"/,
-  'URL: process.env.URL || "https://outline-docs.tusur.ru"'
-);
-
-// Добавляем debug logging
-if (!code.includes('// TUSUR DEBUG')) {
-  code = code.replace(
-    /const env = {/,
-    `// TUSUR DEBUG: Enhanced logging
-console.log('[TUSUR ENV] Loading environment configuration');
-console.log('[TUSUR ENV] URL:', process.env.URL);
-console.log('[TUSUR ENV] CORS_ORIGIN:', process.env.CORS_ORIGIN);
-console.log('[TUSUR ENV] ALLOWED_DOMAINS:', process.env.ALLOWED_DOMAINS);
-
-const env = {`
-  );
+// 2. Патчим socket.io для разрешения WebSocket поверх HTTPS
+const socketIoPath = path.join(__dirname, 'node_modules/socket.io/dist/index.js');
+if (fs.existsSync(socketIoPath)) {
+    let socketIoContent = fs.readFileSync(socketIoPath, 'utf8');
+    
+    // Добавляем middleware для правильной обработки WebSocket
+    if (!socketIoContent.includes('TUSUR WebSocket patch')) {
+        const patchMarker = 'applyMiddleware(server, serveClient, connector) {';
+        const patch = `applyMiddleware(server, serveClient, connector) {
+            // TUSUR WebSocket patch - allow HTTPS WebSocket connections
+            const originalHandleRequest = server.handleRequest;
+            server.handleRequest = function(req, res) {
+                // Fix for nginx proxy
+                if (req.headers['x-forwarded-proto'] === 'https') {
+                    req.connection.encrypted = true;
+                }
+                return originalHandleRequest.call(this, req, res);
+            };`;
+        
+        socketIoContent = socketIoContent.replace(patchMarker, patch);
+        fs.writeFileSync(socketIoPath, socketIoContent);
+        console.log('✓ socket.io патчирован');
+    }
 }
 
-fs.writeFileSync(envFile, code);
-console.log('env.js fixed for TUSUR');
+console.log('Чистый WebSocket фикс применен успешно');
