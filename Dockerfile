@@ -12,6 +12,10 @@ RUN echo "Outline найден в: /opt/outline" && \
   echo "Содержимое в /opt/outline:" && \
   ls -la /opt/outline/
 
+RUN cd /opt/outline && \
+  yarn remove socket.io engine.io && \
+  yarn add socket.io@4.7.2 engine.io@6.5.2 --exact
+
 # Создаем директорию для плагина
 RUN mkdir -p /opt/outline/plugins/tusur-warden
 
