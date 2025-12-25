@@ -92,16 +92,16 @@ class WardenMiddleware {
       // });
 
       // Проверьте заголовки авторизации
-      console.log(`[TUSUR Debug] Headers:`, {
-        authorization: ctx.get('Authorization'),
-        'x-user-id': ctx.get('X-User-Id'),
-        'x-user-email': ctx.get('X-User-Email')
-      });
+      // console.log(`[TUSUR Debug] Headers:`, {
+      //   authorization: ctx.get('Authorization'),
+      //   'x-user-id': ctx.get('X-User-Id'),
+      //   'x-user-email': ctx.get('X-User-Email')
+      // });
 
-      // Проверьте состояние контекста
-      console.log(`[TUSUR Debug] ctx.state.user:`, ctx.state.user ? ctx.state.user.email : 'null');
-      console.log(`[TUSUR Debug] ctx.session:`, ctx.session ? 'exists' : 'null');
-      console.log(`[TUSUR Debug] ctx.sessionStore:`, ctx.sessionStore ? 'exists' : 'null');
+      // // Проверьте состояние контекста
+      // console.log(`[TUSUR Debug] ctx.state.user:`, ctx.state.user ? ctx.state.user.email : 'null');
+      // console.log(`[TUSUR Debug] ctx.session:`, ctx.session ? 'exists' : 'null');
+      // console.log(`[TUSUR Debug] ctx.sessionStore:`, ctx.sessionStore ? 'exists' : 'null');
 
       // Пропускаем OPTIONS запросы
       if (method === 'OPTIONS') {
