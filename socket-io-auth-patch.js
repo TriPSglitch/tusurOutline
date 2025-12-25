@@ -26,7 +26,7 @@ for (const file of possibleFiles) {
 if (!targetFile) {
     console.log('Could not find Socket.IO file, trying default location...');
     targetFile = '/opt/outline/build/server/websockets/index.js';
-
+    
     // Создаем файл если не существует
     if (!fs.existsSync(targetFile)) {
         console.log('Creating websockets directory...');
@@ -154,7 +154,7 @@ try {
     if (fs.existsSync(targetFile)) {
         content = fs.readFileSync(targetFile, 'utf8');
     }
-
+    
     // Check if already patched
     if (content.includes('TUSUR_SOCKET_IO_PATCH')) {
         console.log('Socket.IO already patched');
