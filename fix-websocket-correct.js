@@ -31,7 +31,7 @@ if (upgradeHandlerStart !== -1) {
   const upgradeHandlerEnd = code.indexOf('\n  });', upgradeHandlerStart);
   if (upgradeHandlerEnd !== -1) {
     const currentHandler = code.substring(upgradeHandlerStart, upgradeHandlerEnd + 5);
-    
+
     // Новый handler без проверок
     const newHandler = `  server.on("upgrade", function (req, socket, head) {
     console.log('[TUSUR UPGRADE] WebSocket upgrade:', req.url);
@@ -51,7 +51,7 @@ if (upgradeHandlerStart !== -1) {
 
     socket.end(\`HTTP/1.1 400 Bad Request\\r\\n\`);
   });`;
-    
+
     code = code.replace(currentHandler, newHandler);
     console.log('Upgrade handler fixed');
   }
@@ -61,7 +61,7 @@ if (upgradeHandlerStart !== -1) {
 const ioConnectionMatch = code.match(/io\.on\("connection", async socket => {/);
 if (ioConnectionMatch) {
   const insertIndex = ioConnectionMatch.index;
-  
+
   const middleware = `
   // TUSUR: Middleware for token extraction
   io.use((socket, next) => {
@@ -107,7 +107,7 @@ if (ioConnectionMatch) {
     next();
   });
   `;
-  
+
   // Вставляем middleware перед connection handler
   code = code.slice(0, insertIndex) + middleware + code.slice(insertIndex);
   console.log('TUSUR middleware added');

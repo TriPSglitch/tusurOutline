@@ -8,14 +8,14 @@ console.log('FINAL WebSocket guarantee patch...');
 const outlineWebsocketFile = '/opt/outline/build/server/services/websockets.js';
 if (fs.existsSync(outlineWebsocketFile)) {
   let code = fs.readFileSync(outlineWebsocketFile, 'utf8');
-  
+
   // Находим handler upgrade
   const upgradeHandlerRegex = /server\.on\("upgrade", function \(req, socket, head\) \{[\s\S]*?\n  \}\);/;
   const match = code.match(upgradeHandlerRegex);
-  
+
   if (match) {
     console.log('Found upgrade handler, applying FINAL patch...');
-    
+
     // Полностью заменяем handler на гарантированно работающий
     const newHandler = `  server.on("upgrade", function (req, socket, head) {
     console.log('[TUSUR FINAL GUARANTEE] WebSocket upgrade for:', req.url);
@@ -55,10 +55,10 @@ if (fs.existsSync(outlineWebsocketFile)) {
     console.log('[TUSUR FINAL GUARANTEE] Not a WebSocket path, closing');
     socket.end('HTTP/1.1 400 Bad Request\\r\\n\\r\\n');
   });`;
-    
+
     code = code.replace(upgradeHandlerRegex, newHandler);
     fs.writeFileSync(outlineWebsocketFile, code);
-    
+
     console.log('✓ FINAL upgrade handler patched');
   }
 }
@@ -67,7 +67,7 @@ if (fs.existsSync(outlineWebsocketFile)) {
 const envFile = '/opt/outline/build/server/env.js';
 if (fs.existsSync(envFile)) {
   let code = fs.readFileSync(envFile, 'utf8');
-  
+
   // Гарантируем isCloudHosted = true
   if (!code.includes('isCloudHosted: true // TUSUR')) {
     code = code.replace(
