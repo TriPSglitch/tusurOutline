@@ -26,17 +26,22 @@ services:
       - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
       - REDIS_URL=redis://redis:6379
       - URL=https://outline-docs.tusur.ru
-      - COLLABORATION_URL=wss://outline-docs.tusur.ru
-      - COLLABORATION_SERVER_URL=wss://outline-docs.tusur.ru
+      - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - PUBLIC_URL=https://outline-docs.tusur.ru
-      - REALTIME_URL=wss://outline-docs.tusur.ru
+      - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
       - WEBSOCKETS_ENABLED=true
       - PGSSLMODE=disable
-      - ALLOWED_DOMAINS=outline-docs.tusur.ru,profile.tusur.ru,tusur.ru
+      - ALLOWED_DOMAINS=outline-docs.tusur.ru
       - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
+      - WEB_SOCKETS=true
+      - ALLOWED_WEBSOCKET_ORIGINS=https://outline-docs.tusur.ru
+      - DISABLE_ORIGIN_CHECK=true
+      - WEBSOCKET_PATH=/realtime
+      - SOCKET_PATH=/realtime
+      - WEBSOCKET_URL=wss://outline-docs.tusur.ru
 
-      # Включение гостевого доступа (публичного) 
+      # Включение гостевого доступа (публичного)
       - FORCE_PUBLIC_SITE=true
       - FEATURE_PUBLIC_SHARING=true
 
@@ -48,10 +53,13 @@ services:
       - SHARING=true
 
       # Настройки SSL/HTTPS
-      - FORCE_HTTPS=true
+      - FORCE_HTTPS=false
       - NODE_ENV=production
       - PORT=3000
       - TRUST_PROXY=2
+      - PROXY_SSL=true
+      - PROXY_TRUST=loopback,uniquelocal,172.18.0.0/16,172.16.2.126
+      - PROXY=true
 
       - FILE_STORAGE=local
       - FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
@@ -61,6 +69,14 @@ services:
       - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
+      - LOG_LEVEL=debug
+      - DEBUG=engine*,socket*
+
+      # Отключаем все проверки WebSocket
+      - ENGINE_IO_DISABLE_MIDDLEWARE=true
+      - ENGINE_IO_ALLOW_UPGRADE=true
+      # Форсируем WebSocket без проверок
+      - SOCKETIO_TRANSPORTS='["websocket"]'
 
     volumes:
       - outline_data:/var/lib/outline/data
