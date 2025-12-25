@@ -26,9 +26,9 @@ services:
       - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
       - REDIS_URL=redis://redis:6379
       - URL=https://outline-docs.tusur.ru
-      - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
+      # - COLLABORATION_URL=wss://outline-docs.tusur.ru/collaboration
       - PUBLIC_URL=https://outline-docs.tusur.ru
-      - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
+      # - REALTIME_URL=wss://outline-docs.tusur.ru/realtime
       - WEBSOCKETS_ENABLED=true
       - PGSSLMODE=disable
       - ALLOWED_DOMAINS=outline-docs.tusur.ru
@@ -73,10 +73,10 @@ services:
       - DEBUG=engine*,socket*
 
       # Отключаем все проверки WebSocket
-      - ENGINE_IO_DISABLE_MIDDLEWARE=true
+      # - ENGINE_IO_DISABLE_MIDDLEWARE=true
       - ENGINE_IO_ALLOW_UPGRADE=true
       # Форсируем WebSocket без проверок
-      - SOCKETIO_TRANSPORTS='["websocket"]'
+      # - SOCKETIO_TRANSPORTS='["websocket"]'
 
     volumes:
       - outline_data:/var/lib/outline/data
