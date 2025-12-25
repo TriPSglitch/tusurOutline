@@ -48,11 +48,11 @@ class WardenMiddleware {
     const processedContexts = new WeakSet();
 
     return async (ctx, next) => {
-      console.log(`[TUSUR DEBUG FULL] Запрос: ${ctx.method} ${ctx.path}`);
-      console.log(`[TUSUR DEBUG FULL] Headers:`, ctx.headers);
-      console.log(`[TUSUR DEBUG FULL] Query:`, ctx.query);
-      console.log(`[TUSUR DEBUG FULL] Cookies:`, ctx.cookies);
-      console.log(`[TUSUR DEBUG FULL] Upgrade header:`, ctx.headers.upgrade);
+      // console.log(`[TUSUR DEBUG FULL] Запрос: ${ctx.method} ${ctx.path}`);
+      // console.log(`[TUSUR DEBUG FULL] Headers:`, ctx.headers);
+      // console.log(`[TUSUR DEBUG FULL] Query:`, ctx.query);
+      // console.log(`[TUSUR DEBUG FULL] Cookies:`, ctx.cookies);
+      // console.log(`[TUSUR DEBUG FULL] Upgrade header:`, ctx.headers.upgrade);
 
       // Если этот контекст уже обработан, пропускаем
       if (processedContexts.has(ctx)) {
