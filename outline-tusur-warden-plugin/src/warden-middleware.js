@@ -233,16 +233,16 @@ class WardenMiddleware {
         }
       }
 
-      // Различная логика для API и веб-запросов
-      if (path.startsWith('/api/')) {
-        console.log(`[TUSUR Auth] API запрос без авторизации: ${path}`);
-        // Пропускаем - Outline вернет 401
-        return next();
-      } else {
-        // Веб-запрос - редиректим на warden
-        console.log(`[TUSUR Auth] Веб-запрос не авторизован, редирект на warden`);
-        return this.redirectToWarden(ctx);
-      }
+      // // Различная логика для API и веб-запросов
+      // if (path.startsWith('/api/')) {
+      //   console.log(`[TUSUR Auth] API запрос без авторизации: ${path}`);
+      //   // Пропускаем - Outline вернет 401
+      //   return next();
+      // } else {
+      //   // Веб-запрос - редиректим на warden
+      //   console.log(`[TUSUR Auth] Веб-запрос не авторизован, редирект на warden`);
+      //   return this.redirectToWarden(ctx);
+      // }
 
       if (ctx.path === '/api/auth.info') {
         console.log(`[TUSUR Auth Info] Запрос к auth.info`);

@@ -32,10 +32,10 @@ services:
       - WEBSOCKETS_ENABLED=true
       - PGSSLMODE=disable
       - ALLOWED_DOMAINS=outline-docs.tusur.ru
-      - CORS_ORIGIN=https://outline-docs.tusur.ru
+      # - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
       - WEB_SOCKETS=true
-      - ALLOWED_WEBSOCKET_ORIGINS=https://outline-docs.tusur.ru
+      # - ALLOWED_WEBSOCKET_ORIGINS=https://outline-docs.tusur.ru
       - DISABLE_ORIGIN_CHECK=true
       - WEBSOCKET_PATH=/realtime
       - SOCKET_PATH=/realtime
