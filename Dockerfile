@@ -39,10 +39,10 @@ RUN npm install ioredis @koa/router
 WORKDIR /opt/outline
 
 # Копируем исправленный патч WebSocket
-COPY grand-fix-backup.js /tmp/grand-fix-backup.js
-RUN node /tmp/grand-fix-backup.js
-COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
-RUN node /tmp/fix-typescript-in-index.js
+# COPY grand-fix-backup.js /tmp/grand-fix-backup.js
+# RUN node /tmp/grand-fix-backup.js
+# COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
+# RUN node /tmp/fix-typescript-in-index.js
 
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
