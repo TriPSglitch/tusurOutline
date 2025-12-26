@@ -73,6 +73,13 @@ RUN node /tmp/patch-engineio-complete.js
 # RUN node /tmp/check-patches.js
 # RUN node /tmp/fix-engineio-minimal.js
 
+RUN echo "Патчинг Outline websockets.js..." && \
+    if [ -f "/opt/outline/build/server/services/websockets.js" ]; then \
+        cp /opt/outline/build/server/services/websockets.js /opt/outline/build/server/services/websockets.js.backup && \
+        sed -i 's/origin: "https:\/\/outline-docs.tusur.ru"/origin: "*"/g' /opt/outline/build/server/services/websockets.js && \
+        echo "✓ Outline websockets.js исправлен (CORS)"; \
+    fi
+
 RUN echo "=== Проверка патчей ===" && \
     grep -l "TUSUR" /opt/outline/node_modules/engine.io/build/server.js 2>/dev/null && \
     echo "✓ Engine.io пропатчен" || echo "✗ Engine.io не пропатчен" && \
