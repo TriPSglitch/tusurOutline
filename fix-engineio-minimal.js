@@ -1,25 +1,48 @@
 const fs = require('fs');
-const path = '/opt/outline/node_modules/engine.io/lib/server.js';
+const path = require('path');
 
 console.log('Применение минимального engine.io патча для TUSUR...');
 
-const backupPath = path + '.backup';
-if (!fs.existsSync(backupPath)) {
-  fs.copyFileSync(path, backupPath);
-  console.log('✓ Создана резервная копия');
+// Проверяем наличие engine.io
+const engineIoPath = '/opt/outline/node_modules/engine.io';
+if (!fs.existsSync(engineIoPath)) {
+  console.error('❌ engine.io не установлен!');
+  console.error('Запустите: npm install engine.io в /opt/outline');
+  process.exit(1);
 }
 
-let content = fs.readFileSync(path, 'utf8');
+const serverJsPath = path.join(engineIoPath, 'lib/server.js');
+console.log('Путь к server.js:', serverJsPath);
 
-// ВАЖНО: Патчим ТОЛЬКО проверку заголовков, не добавляя middleware
-if (!content.includes('// TUSUR FIX: Allow WebSocket upgrade')) {
-  // Находим оригинальную проверку upgrade
-  const pattern = /if\s*\(\s*!upgrade\s*\)\s*\{[\s\S]*?this\.handleUpgrade\(/g;
+if (!fs.existsSync(serverJsPath)) {
+  console.error('❌ Файл server.js не найден в engine.io');
+  console.error('Проверьте установку engine.io');
+  process.exit(1);
+}
+
+const backupPath = serverJsPath + '.backup';
+if (!fs.existsSync(backupPath)) {
+  try {
+    fs.copyFileSync(serverJsPath, backupPath);
+    console.log('✓ Создана резервная копия');
+  } catch (err) {
+    console.error('❌ Ошибка создания бэкапа:', err.message);
+  }
+}
+
+let content = fs.readFileSync(serverJsPath, 'utf8');
+
+// Проверяем, не патчен ли уже файл
+if (!content.includes('TUSUR FIX')) {
+  // Патчим проверку заголовков Upgrade
+  const searchPattern = /if\s*\(\s*!upgrade\s*\)\s*\{[\s\S]*?this\.handleUpgrade\(/;
+  const matches = content.match(searchPattern);
   
-  if (content.match(pattern)) {
-    // Упрощаем проверку - всегда разрешаем WebSocket если есть заголовок Upgrade
+  if (matches) {
+    console.log('✓ Найдена оригинальная проверка upgrade');
+    
     content = content.replace(
-      /if\s*\(\s*!upgrade\s*\)\s*\{[\s\S]*?this\.handleUpgrade\(/,
+      searchPattern,
       `// TUSUR FIX: Allow WebSocket upgrade
       if (!upgrade && req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
         upgrade = true;
@@ -28,11 +51,22 @@ if (!content.includes('// TUSUR FIX: Allow WebSocket upgrade')) {
         return this.handleUpgrade(`
     );
     
-    fs.writeFileSync(path, content);
-    console.log('✓ Применен минимальный патч для проверки заголовков');
+    try {
+      fs.writeFileSync(serverJsPath, content, 'utf8');
+      console.log('✓ Патч успешно применен');
+      
+      // Проверяем результат
+      const newContent = fs.readFileSync(serverJsPath, 'utf8');
+      if (newContent.includes('TUSUR FIX')) {
+        console.log('✓ Проверка: патч присутствует в файле');
+      }
+    } catch (err) {
+      console.error('❌ Ошибка записи файла:', err.message);
+    }
   } else {
-    console.log('✗ Не найдена оригинальная проверка upgrade');
+    console.error('❌ Не найдена проверка upgrade в файле');
+    console.log('Содержимое первых 500 символов:', content.substring(0, 500));
   }
 } else {
-  console.log('✓ Патч уже применен');
+  console.log('✓ Патч уже применен ранее');
 }
