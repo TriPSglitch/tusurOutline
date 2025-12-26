@@ -60,10 +60,9 @@ COPY fix-env.js /tmp/fix-env.js
 # COPY check-patches.js /tmp/check-patches.js
 COPY fix-engineio-minimal.js /tmp/fix-engineio-minimal.js
 
-RUN echo "=== Поиск engine.io ===" && \
-    find /opt/outline -name "server.js" -path "*/engine.io/*" | head -5 && \
-    ls -la /opt/outline/node_modules/socket.io/node_modules/ 2>/dev/null | grep engine && \
-    ls -la /opt/outline/node_modules/.pnpm/ 2>/dev/null | grep engine
+RUN echo "=== Структура engine.io ===" && \
+    ls -la /opt/outline/node_modules/engine.io/ && \
+    ls -la /opt/outline/node_modules/engine.io/build/
 
 RUN node /tmp/patch-server.js
 RUN node /tmp/fix-env.js
@@ -74,9 +73,11 @@ RUN node /tmp/fix-env.js
 # RUN node /tmp/check-patches.js
 RUN node /tmp/fix-engineio-minimal.js
 
-RUN echo "=== Проверка engine.io ===" && \
-    find /opt/outline/node_modules -name "*engine*" -type d | head -5 && \
-    ls -la /opt/outline/node_modules/engine.io/lib/ 2>/dev/null || echo "engine.io не установлен"
+RUN echo "=== Проверка патчей ===" && \
+    grep -l "TUSUR" /opt/outline/node_modules/engine.io/build/server.js 2>/dev/null && \
+    echo "✓ Engine.io пропатчен" || echo "✗ Engine.io не пропатчен" && \
+    grep -l "TUSUR" /opt/outline/build/server/services/websockets.js 2>/dev/null && \
+    echo "✓ Outline websockets пропатчен" || echo "✗ Outline websockets не пропатчен"
 
 # Копируем entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

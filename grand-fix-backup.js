@@ -156,7 +156,7 @@ if (fs.existsSync(routesPath)) {
 // 5. Восстановление node_modules патчей
 console.log('\n5. Отмена патчей в node_modules...');
 const nodeModulesPatches = [
-    '/opt/outline/node_modules/engine.io/lib/server.js',
+    '/opt/outline/node_modules/engine.io/build/server.js',
     '/opt/outline/node_modules/engine.io/lib/transports/websocket.js',
     '/opt/outline/node_modules/socket.io/dist/index.js'
 ];

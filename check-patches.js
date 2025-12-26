@@ -1,5 +1,5 @@
 const fs = require('fs');
-const path = '/opt/outline/node_modules/engine.io/lib/server.js';
+const path = '/opt/outline/node_modules/engine.io/build/server.js';
 
 console.log('=== Проверка engine.io патчей ===');
 if (fs.existsSync(path)) {
