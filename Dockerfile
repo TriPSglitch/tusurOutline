@@ -12,6 +12,8 @@ RUN echo "Outline найден в: /opt/outline" && \
   echo "Содержимое в /opt/outline:" && \
   ls -la /opt/outline/
 
+RUN apt-get update && apt-get install -y curl && apt-get clean
+
 # Создаем директорию для плагина
 RUN mkdir -p /opt/outline/plugins/tusur-warden
 
@@ -38,17 +40,15 @@ RUN npm install ioredis @koa/router
 # Возвращаемся в основную директорию
 WORKDIR /opt/outline
 
-RUN echo "=== Проверка текущих зависимостей ===" && \
-    cd /opt/outline && \
-    npm list engine.io 2>/dev/null || echo "engine.io не найден в dependencies" && \
-    npm list socket.io 2>/dev/null | head -5 && \
-    find /opt/outline/node_modules -name "engine.io" -type d | xargs ls -la 2>/dev/null
+RUN echo "=== Outline structure ===" && \
+    find /opt/outline/build -name "*.js" -type f | xargs grep -l "socketIo\|engine.io" 2>/dev/null | head -10 && \
+    ls -la /opt/outline/build/server/ 2>/dev/null | head -20
 
 # Копируем исправленный патч WebSocket
-COPY grand-fix-backup.js /tmp/grand-fix-backup.js
-RUN node /tmp/grand-fix-backup.js
-COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
-RUN node /tmp/fix-typescript-in-index.js
+# COPY grand-fix-backup.js /tmp/grand-fix-backup.js
+# RUN node /tmp/grand-fix-backup.js
+# COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
+# RUN node /tmp/fix-typescript-in-index.js
 
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
