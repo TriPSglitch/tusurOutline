@@ -1,222 +1,213 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('Applying SAFE engine.io patch for TUSUR v3...');
+console.log('Applying FINAL engine.io fix for TUSUR...');
 
-// 1. Проверяем структуру
-console.log('=== Checking structure ===');
-const checkPaths = [
-  '/opt/outline/node_modules/engine.io/build/server.js',
-  '/opt/outline/node_modules/socket.io/build/index.js',
-  '/opt/outline/node_modules/socket.io/dist/index.js',
-  '/opt/outline/build/server',
-  '/opt/outline/build'
-];
-
-checkPaths.forEach(p => {
-  console.log(`${fs.existsSync(p) ? '✓' : '✗'} ${p}`);
-});
-
-// 2. Патчим engine.io server.js
 const engineServerFile = '/opt/outline/node_modules/engine.io/build/server.js';
-if (fs.existsSync(engineServerFile)) {
-  console.log('Patching engine.io server.js...');
-  
-  let content = fs.readFileSync(engineServerFile, 'utf8');
-  
-  // Ищем handleRequest - основная функция engine.io v6
-  if (content.includes('handleRequest(req, res)')) {
-    // Патчим ДО проверок
-    const handleRequestPattern = /handleRequest\(req,\s*res\)\s*\{/;
-    
-    if (content.match(handleRequestPattern)) {
-      content = content.replace(
-        handleRequestPattern,
-        `handleRequest(req, res) {
-  // TUSUR PATCH v3: Engine.io WebSocket fix
-  console.log('[TUSUR Engine] Request to:', req.url);
-  
-  // Если это WebSocket запрос, помечаем его
-  const isWebSocket = req.headers.upgrade && 
-                     req.headers.upgrade.toLowerCase() === 'websocket' &&
-                     req.url.includes('transport=websocket');
-  
-  if (isWebSocket) {
-    console.log('[TUSUR Engine] WebSocket upgrade detected');
-    // Помечаем запрос как прошедший проверку
-    req._tusurWebSocket = true;
-  }`
-      );
-      console.log('✓ Engine.io handleRequest patched');
-    }
-  }
-  
-  // Также патчим verify функцию
-  if (content.includes('function verify(req, upgrade, fn)')) {
-    content = content.replace(
-      /function verify\(req,\s*upgrade,\s*fn\)\s*\{/,
-      `function verify(req, upgrade, fn) {
-  // TUSUR PATCH v3: Skip verification for WebSocket
-  if (req._tusurWebSocket) {
-    console.log('[TUSUR Engine] Verification skipped for TUSUR WebSocket');
-    return fn();
-  }`
-    );
-    console.log('✓ Engine.io verify function patched');
-  }
-  
-  fs.writeFileSync(engineServerFile, content);
-  console.log('✓ engine.io server.js patched SAFELY');
-} else {
-  console.log('✗ engine.io server.js not found!');
+
+if (!fs.existsSync(engineServerFile)) {
+  console.error('❌ engine.io server.js not found!');
+  process.exit(1);
 }
 
-// 3. Патчим engine.io websocket.js
-const engineWebsocketFile = '/opt/outline/node_modules/engine.io/build/transports/websocket.js';
-if (fs.existsSync(engineWebsocketFile)) {
-  console.log('Patching engine.io websocket.js SAFELY...');
+// Создаем резервную копию
+const backupFile = engineServerFile + '.backup-final';
+if (!fs.existsSync(backupFile)) {
+  fs.copyFileSync(engineServerFile, backupFile);
+  console.log('✓ Backup created:', backupFile);
+}
+
+let content = fs.readFileSync(engineServerFile, 'utf8');
+
+console.log('File length:', content.length);
+console.log('Searching for verify function...');
+
+// КРИТИЧЕСКИ ВАЖНО: Находим и патчим verify() функцию
+const verifyPattern = /function verify\(req,\s*upgrade,\s*fn\)\s*\{[\s\S]*?\}/;
+
+const verifyMatch = content.match(verifyPattern);
+if (verifyMatch) {
+  console.log('✓ Found verify() function, length:', verifyMatch[0].length);
   
-  let content = fs.readFileSync(engineWebsocketFile, 'utf8');
+  // Полностью заменяем verify() функцию
+  const newVerify = `function verify(req, upgrade, fn) {
+  // TUSUR FINAL FIX: Always allow WebSocket upgrades
+  console.log('[TUSUR FINAL] verify called:', {
+    url: req.url,
+    upgrade: upgrade,
+    headers: req.headers
+  });
+  
+  // Если это WebSocket запрос - сразу разрешаем
+  const isWebSocketRequest = req.headers.upgrade && 
+                           req.headers.upgrade.toLowerCase() === 'websocket' &&
+                           req.url.includes('transport=websocket');
+  
+  if (isWebSocketRequest) {
+    console.log('[TUSUR FINAL] WebSocket upgrade ALLOWED');
+    // Пропускаем все проверки для WebSocket
+    return fn();
+  }
+  
+  // Оригинальная логика для остальных случаев
+  if (!upgrade) {
+    return fn();
+  }
+  
+  const headers = req.headers;
+  
+  if (!headers.upgrade) {
+    return fn();
+  }
+  
+  if (headers.upgrade.toLowerCase() !== 'websocket') {
+    return fn();
+  }
+  
+  if (!headers['sec-websocket-key'] ||
+      !headers['sec-websocket-version'] ||
+      headers['sec-websocket-version'] !== '13') {
+    return fn();
+  }
+  
+  // Если всё ок - вызываем колбек с true
+  fn(null, true);
+}`;
+
+  content = content.replace(verifyPattern, newVerify);
+  console.log('✓ verify() function COMPLETELY replaced');
+} else {
+  console.log('✗ verify() function not found in expected format');
+  
+  // Альтернативный поиск: может быть стрелочная функция
+  const arrowPattern = /const verify\s*=\s*\(req,\s*upgrade,\s*fn\)\s*=>\s*\{[\s\S]*?\}/;
+  const arrowMatch = content.match(arrowPattern);
+  
+  if (arrowMatch) {
+    console.log('✓ Found arrow function verify');
+    const newArrowVerify = `const verify = (req, upgrade, fn) => {
+  // TUSUR FINAL FIX: Always allow WebSocket upgrades
+  console.log('[TUSUR FINAL] verify arrow function called');
+  
+  if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
+    console.log('[TUSUR FINAL] WebSocket upgrade allowed (arrow)');
+    return fn(null, true);
+  }
+  
+  // Original logic
+  if (!upgrade) return fn();
+  if (!req.headers.upgrade) return fn();
+  if (req.headers.upgrade.toLowerCase() !== 'websocket') return fn();
+  if (!req.headers['sec-websocket-key'] || !req.headers['sec-websocket-version']) return fn();
+  if (req.headers['sec-websocket-version'] !== '13') return fn();
+  
+  fn(null, true);
+}`;
+    
+    content = content.replace(arrowPattern, newArrowVerify);
+    console.log('✓ Arrow verify function replaced');
+  }
+}
+
+// Также патчим handleRequest для дополнительной логики
+if (content.includes('handleRequest(req, res)')) {
+  content = content.replace(
+    /handleRequest\(req,\s*res\)\s*\{/,
+    `handleRequest(req, res) {
+  // TUSUR FINAL FIX: Log all requests
+  console.log('[TUSUR FINAL] handleRequest:', req.url, 'Upgrade:', req.headers.upgrade);
+  
+  // Mark WebSocket requests
+  if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
+    req._tusurFinalWebSocket = true;
+  }`
+  );
+  console.log('✓ handleRequest patched');
+}
+
+// Патчим _onUpgrade для полного обхода проверок
+if (content.includes('_onUpgrade(req, socket, head)')) {
+  content = content.replace(
+    /_onUpgrade\(req,\s*socket,\s*head\)\s*\{/,
+    `_onUpgrade(req, socket, head) {
+  // TUSUR FINAL FIX: Skip all checks for WebSocket
+  if (req._tusurFinalWebSocket) {
+    console.log('[TUSUR FINAL] _onUpgrade: WebSocket detected, skipping checks');
+    this.emit('upgrade', req, socket, head);
+    return;
+  }`
+  );
+  console.log('✓ _onUpgrade patched');
+}
+
+// Записываем исправленный файл
+fs.writeFileSync(engineServerFile, content, 'utf8');
+console.log('✓ engine.io server.js FINALLY patched');
+
+// Патчим websocket.js тоже
+const websocketFile = '/opt/outline/node_modules/engine.io/build/transports/websocket.js';
+if (fs.existsSync(websocketFile)) {
+  let wsContent = fs.readFileSync(websocketFile, 'utf8');
   
   // Патчим doUpgrade
-  if (content.includes('function doUpgrade(req, socket, head)')) {
-    content = content.replace(
+  if (wsContent.includes('function doUpgrade(req, socket, head)')) {
+    wsContent = wsContent.replace(
       /function doUpgrade\(req,\s*socket,\s*head\)\s*\{/,
       `function doUpgrade(req, socket, head) {
-  // TUSUR PATCH v3: Log WebSocket upgrade
-  console.log('[TUSUR Engine Websocket] doUpgrade called for:', req.url);
+  // TUSUR FINAL FIX: Allow all upgrades
+  console.log('[TUSUR FINAL Websocket] doUpgrade called for:', req.url);
   
-  // Пропускаем стандартные проверки для TUSUR
-  if (req._tusurWebSocket) {
-    console.log('[TUSUR Engine Websocket] TUSUR WebSocket detected, skipping checks');
+  // Если запрос от TUSUR - пропускаем все проверки
+  if (req._tusurFinalWebSocket) {
+    console.log('[TUSUR FINAL Websocket] TUSUR WebSocket, calling _upgrade directly');
     try {
       this._upgrade(req, socket, head);
-      return;
     } catch (err) {
-      console.log('[TUSUR Engine Websocket] Error:', err.message);
+      console.error('[TUSUR FINAL Websocket] Error:', err.message);
     }
+    return;
   }`
     );
-  }
-  
-  fs.writeFileSync(engineWebsocketFile, content);
-  console.log('✓ engine.io websocket.js patched SAFELY');
-} else {
-  console.log('✗ engine.io websocket.js not found!');
-}
-
-// 4. Патчим socket.io (ищем в правильном месте)
-const socketIoPaths = [
-  '/opt/outline/node_modules/socket.io/build/index.js',
-  '/opt/outline/node_modules/socket.io/dist/index.js'
-];
-
-let socketPatched = false;
-for (const socketPath of socketIoPaths) {
-  if (fs.existsSync(socketPath)) {
-    console.log(`Patching socket.io SAFELY: ${socketPath}`);
     
-    let content = fs.readFileSync(socketPath, 'utf8');
-    
-    // Патчим applyMiddleware для добавления TUSUR middleware
-    if (content.includes('applyMiddleware')) {
-      content = content.replace(
-        /applyMiddleware\(middleware\)\s*\{/,
-        `applyMiddleware(middleware) {
-  // TUSUR PATCH v3: Add TUSUR middleware for WebSocket support
-  if (!this._middlewares) this._middlewares = [];
-  
-  const tusurMiddleware = (req, res, next) => {
-    // Log WebSocket attempts
-    if (req.headers.upgrade && req.headers.upgrade.toLowerCase() === 'websocket') {
-      console.log('[TUSUR Socket.io] WebSocket request detected');
-      req._tusurSocketIo = true;
-    }
-    next();
-  };
-  
-  // Add our middleware first
-  this._middlewares.unshift(tusurMiddleware);
-  this._middlewares.push(middleware);`
-      );
-      
-      fs.writeFileSync(socketPath, content);
-      console.log('✓ socket.io patched SAFELY');
-      socketPatched = true;
-      break;
-    }
+    fs.writeFileSync(websocketFile, wsContent, 'utf8');
+    console.log('✓ engine.io websocket.js FINALLY patched');
   }
 }
 
-if (!socketPatched) {
-  console.log('✗ Could not find or patch socket.io');
-}
-
-// 5. Ищем и патчим Outline websockets файл
-console.log('=== Searching for Outline websockets file ===');
-const possibleWebsocketsPaths = [
-  '/opt/outline/build/server/websockets.js',
-  '/opt/outline/build/server/services/websockets.js',
-  '/opt/outline/build/server/websockets/index.js',
-  '/opt/outline/build/server/index.js'
-];
-
-let outlinePatched = false;
-for (const wsPath of possibleWebsocketsPaths) {
-  if (fs.existsSync(wsPath)) {
-    console.log(`Found websockets file: ${wsPath}`);
-    
-    let content = fs.readFileSync(wsPath, 'utf8');
-    
-    // Патчим настройки Socket.IO
-    if (content.includes('new socketIo.Server') || content.includes('socketIo(server')) {
-      // Упрощаем CORS
-      content = content.replace(
-        /cors:\s*\{[^}]+\}/g,
-        `cors: {
+// Патчим Outline websockets.js для правильных настроек
+const outlineWebsockets = '/opt/outline/build/server/services/websockets.js';
+if (fs.existsSync(outlineWebsockets)) {
+  let outlineContent = fs.readFileSync(outlineWebsockets, 'utf8');
+  
+  // Проверяем текущие настройки CORS
+  console.log('Current CORS in websockets.js:', 
+    outlineContent.match(/cors:\s*\{[^}]+?\}/)?.[0]?.substring(0, 100) || 'Not found');
+  
+  // Исправляем CORS настройки
+  outlineContent = outlineContent.replace(
+    /cors:\s*\{[^}]+?\}/g,
+    `cors: {
     origin: "*",
     methods: ["GET", "POST", "OPTIONS"],
     credentials: true,
     allowedHeaders: ["*"]
   }`
-      );
-      
-      // Добавляем transports
-      if (content.includes('transports:')) {
-        content = content.replace(
-          /transports:\s*\[[^\]]+\]/g,
-          'transports: ["websocket", "polling"]'
-        );
-      } else {
-        // Добавляем transports если их нет
-        content = content.replace(
-          /(new socketIo\.Server\(server,\s*\{)/,
-          `$1
+  );
+  
+  // Добавляем transports если их нет
+  if (!outlineContent.includes('transports:')) {
+    outlineContent = outlineContent.replace(
+      /(new socketIo\.Server\(server,\s*\{)/,
+      `$1
   transports: ["websocket", "polling"],
   allowUpgrades: true,`
-        );
-      }
-      
-      fs.writeFileSync(wsPath, content);
-      console.log(`✓ Outline websockets patched: ${wsPath}`);
-      outlinePatched = true;
-      break;
-    }
+    );
   }
-}
-
-if (!outlinePatched) {
-  console.log('⚠️  Could not find Outline websockets configuration');
-  console.log('Trying to find where Socket.IO is initialized...');
   
-  // Ищем в других файлах
-  const searchCmd = `find /opt/outline/build -name "*.js" -type f -exec grep -l "socketIo" {} \\; 2>/dev/null | head -5`;
-  require('child_process').execSync(searchCmd, { encoding: 'utf8' })
-    .split('\n')
-    .filter(Boolean)
-    .forEach(file => console.log(`  Potential: ${file}`));
+  fs.writeFileSync(outlineWebsockets, outlineContent, 'utf8');
+  console.log('✓ Outline websockets.js FINALLY patched');
 }
 
-console.log('============================================');
-console.log('SAFE engine.io patch v3 applied!');
-console.log('============================================');
+console.log('===========================================');
+console.log('FINAL engine.io patch applied successfully!');
+console.log('===========================================');
