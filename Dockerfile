@@ -51,6 +51,8 @@ COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
 COPY patch-websocket-final.js /tmp/patch-websocket-final.js
 COPY patch-engineio-complete.js /tmp/patch-engineio-complete.js
 COPY fix-broken-socketio.js /tmp/fix-broken-socketio.js
+COPY check-patches.js /tmp/check-patches.js
+# COPY fix-engineio-minimal.js /tmp/fix-engineio-minimal.js
 
 RUN node /tmp/patch-server.js
 RUN node /tmp/fix-env.js
@@ -58,6 +60,8 @@ RUN node /tmp/fix-websocket-correct.js
 RUN node /tmp/patch-websocket-final.js
 RUN node /tmp/patch-engineio-complete.js
 RUN node /tmp/fix-broken-socketio.js
+RUN node /tmp/check-patches.js
+# RUN node /tmp/fix-engineio-minimal.js
 
 # Копируем entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
