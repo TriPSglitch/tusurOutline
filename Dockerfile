@@ -38,7 +38,11 @@ RUN npm install ioredis @koa/router
 # Возвращаемся в основную директорию
 WORKDIR /opt/outline
 
-RUN cd /opt/outline && npm install engine.io --no-save
+RUN echo "=== Проверка текущих зависимостей ===" && \
+    cd /opt/outline && \
+    npm list engine.io 2>/dev/null || echo "engine.io не найден в dependencies" && \
+    npm list socket.io 2>/dev/null | head -5 && \
+    find /opt/outline/node_modules -name "engine.io" -type d | xargs ls -la 2>/dev/null
 
 # Копируем исправленный патч WebSocket
 # COPY grand-fix-backup.js /tmp/grand-fix-backup.js
@@ -55,6 +59,11 @@ COPY fix-env.js /tmp/fix-env.js
 # COPY fix-broken-socketio.js /tmp/fix-broken-socketio.js
 # COPY check-patches.js /tmp/check-patches.js
 COPY fix-engineio-minimal.js /tmp/fix-engineio-minimal.js
+
+RUN echo "=== Поиск engine.io ===" && \
+    find /opt/outline -name "server.js" -path "*/engine.io/*" | head -5 && \
+    ls -la /opt/outline/node_modules/socket.io/node_modules/ 2>/dev/null | grep engine && \
+    ls -la /opt/outline/node_modules/.pnpm/ 2>/dev/null | grep engine
 
 RUN node /tmp/patch-server.js
 RUN node /tmp/fix-env.js
