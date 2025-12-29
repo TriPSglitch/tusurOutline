@@ -276,15 +276,16 @@ class WardenMiddleware {
       return false; // Требует аутентификации
     }
     /*
-        // Пропускаем WebSocket запросы - они обрабатываются отдельно
-        if (ctx.headers.upgrade && ctx.headers.upgrade.toLowerCase() === 'websocket') {
-          return false; // Требует специальной обработки
-        }
-    */
+    // Пропускаем WebSocket запросы - они обрабатываются отдельно
+    if (ctx.headers.upgrade && ctx.headers.upgrade.toLowerCase() === 'websocket') {
+      return false; // Требует специальной обработки
+    }
+    
     // Добавьте /realtime/ в публичные пути или обрабатывайте отдельно
     if (path.startsWith('/realtime/')) {
       return false; // Обрабатывается в WebSocket секции
     }
+    */
 
     // Точное совпадение
     if (publicPaths.includes(path)) {
