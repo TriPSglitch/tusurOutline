@@ -108,68 +108,68 @@ class WardenMiddleware {
         return next();
       }
 
-      if (path.startsWith('/realtime/') || path.startsWith('/collaboration/')) {
-        console.log(`[TUSUR WebSocket] WebSocket запрос: ${path}`);
+      // if (path.startsWith('/realtime/') || path.startsWith('/collaboration/')) {
+      //   console.log(`[TUSUR WebSocket] WebSocket запрос: ${path}`);
 
-        // Получаем токен из cookies
-        const accessToken = ctx.cookies.get('accessToken');
+      //   // Получаем токен из cookies
+      //   const accessToken = ctx.cookies.get('accessToken');
 
-        if (accessToken) {
-          console.log(`[TUSUR WebSocket] Найден accessToken: ${accessToken.substring(0, 30)}...`);
+      //   if (accessToken) {
+      //     console.log(`[TUSUR WebSocket] Найден accessToken: ${accessToken.substring(0, 30)}...`);
 
-          // КРИТИЧЕСКИ ВАЖНО: устанавливаем токен в query параметры
-          // Outline Socket.IO ищет токен в query, а не в cookies
-          ctx.query.accessToken = accessToken;
-          console.log(`[TUSUR WebSocket] Токен установлен в query: accessToken=${accessToken.substring(0, 20)}...`);
+      //     // КРИТИЧЕСКИ ВАЖНО: устанавливаем токен в query параметры
+      //     // Outline Socket.IO ищет токен в query, а не в cookies
+      //     ctx.query.accessToken = accessToken;
+      //     console.log(`[TUSUR WebSocket] Токен установлен в query: accessToken=${accessToken.substring(0, 20)}...`);
 
-          // Также аутентифицируем пользователя
-          const tokenUser = await this.validateWebSocketToken(accessToken);
-          if (tokenUser) {
-            console.log(`[TUSUR WebSocket] Пользователь авторизован: ${tokenUser.email}`);
-            ctx.state.user = tokenUser;
-            ctx.state.authToken = accessToken;
+      //     // Также аутентифицируем пользователя
+      //     const tokenUser = await this.validateWebSocketToken(accessToken);
+      //     if (tokenUser) {
+      //       console.log(`[TUSUR WebSocket] Пользователь авторизован: ${tokenUser.email}`);
+      //       ctx.state.user = tokenUser;
+      //       ctx.state.authToken = accessToken;
 
-            // Устанавливаем заголовки
-            ctx.set('X-User-Id', tokenUser.id);
-            ctx.set('X-User-Email', tokenUser.email);
-          }
-        } else {
-          console.log(`[TUSUR WebSocket] Нет accessToken в cookies`);
-        }
+      //       // Устанавливаем заголовки
+      //       ctx.set('X-User-Id', tokenUser.id);
+      //       ctx.set('X-User-Email', tokenUser.email);
+      //     }
+      //   } else {
+      //     console.log(`[TUSUR WebSocket] Нет accessToken в cookies`);
+      //   }
 
-        return next();
-      }
+      //   return next();
+      // }
 
-      if (ctx.headers.upgrade && ctx.headers.upgrade.toLowerCase() === 'websocket') {
-        console.log(`[TUSUR WebSocket] WebSocket запрос: ${ctx.path}`);
+      // if (ctx.headers.upgrade && ctx.headers.upgrade.toLowerCase() === 'websocket') {
+      //   console.log(`[TUSUR WebSocket] WebSocket запрос: ${ctx.path}`);
 
-        // Получаем токен из cookies (основной способ)
-        const accessToken = ctx.cookies.get('accessToken');
+      //   // Получаем токен из cookies (основной способ)
+      //   const accessToken = ctx.cookies.get('accessToken');
 
-        if (accessToken) {
-          console.log(`[TUSUR WebSocket] Найден accessToken: ${accessToken.substring(0, 30)}...`);
+      //   if (accessToken) {
+      //     console.log(`[TUSUR WebSocket] Найден accessToken: ${accessToken.substring(0, 30)}...`);
 
-          // КРИТИЧЕСКИ ВАЖНО: Устанавливаем токен в query параметры
-          // Outline Socket.IO ожидает токен в query
-          ctx.query.accessToken = accessToken;
+      //     // КРИТИЧЕСКИ ВАЖНО: Устанавливаем токен в query параметры
+      //     // Outline Socket.IO ожидает токен в query
+      //     ctx.query.accessToken = accessToken;
 
-          // Также валидируем пользователя
-          const tokenUser = await this.validateWebSocketToken(accessToken);
-          if (tokenUser) {
-            console.log(`[TUSUR WebSocket] Пользователь авторизован: ${tokenUser.email}`);
-            ctx.state.user = tokenUser;
-            ctx.state.authToken = accessToken;
+      //     // Также валидируем пользователя
+      //     const tokenUser = await this.validateWebSocketToken(accessToken);
+      //     if (tokenUser) {
+      //       console.log(`[TUSUR WebSocket] Пользователь авторизован: ${tokenUser.email}`);
+      //       ctx.state.user = tokenUser;
+      //       ctx.state.authToken = accessToken;
 
-            // Устанавливаем заголовки для WebSocket
-            ctx.set('X-User-Id', tokenUser.id);
-            ctx.set('X-User-Email', tokenUser.email);
-          }
-        } else {
-          console.log(`[TUSUR WebSocket] Нет accessToken в cookies`);
-        }
+      //       // Устанавливаем заголовки для WebSocket
+      //       ctx.set('X-User-Id', tokenUser.id);
+      //       ctx.set('X-User-Email', tokenUser.email);
+      //     }
+      //   } else {
+      //     console.log(`[TUSUR WebSocket] Нет accessToken в cookies`);
+      //   }
 
-        return next();
-      }
+      //   return next();
+      // }
 
       // Расширенный список публичных путей
       const publicPaths = [
@@ -272,9 +272,9 @@ class WardenMiddleware {
   }
 
   isPathPublic(path, publicPaths) {
-    if (path.startsWith('/collaboration/')) {
-      return false; // Требует аутентификации
-    }
+    // if (path.startsWith('/collaboration/')) {
+    //   return false; // Требует аутентификации
+    // }
     /*
     // Пропускаем WebSocket запросы - они обрабатываются отдельно
     if (ctx.headers.upgrade && ctx.headers.upgrade.toLowerCase() === 'websocket') {

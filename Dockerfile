@@ -45,10 +45,10 @@ RUN echo "=== Outline structure ===" && \
     ls -la /opt/outline/build/server/ 2>/dev/null | head -20
 
 # Копируем исправленный патч WebSocket
-COPY grand-fix-backup.js /tmp/grand-fix-backup.js
-RUN node /tmp/grand-fix-backup.js
-COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
-RUN node /tmp/fix-typescript-in-index.js
+# COPY grand-fix-backup.js /tmp/grand-fix-backup.js
+# RUN node /tmp/grand-fix-backup.js
+# COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
+# RUN node /tmp/fix-typescript-in-index.js
 
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
@@ -59,6 +59,7 @@ COPY patch-engineio-complete.js /tmp/patch-engineio-complete.js
 # COPY fix-broken-socketio.js /tmp/fix-broken-socketio.js
 # COPY check-patches.js /tmp/check-patches.js
 # COPY fix-engineio-minimal.js /tmp/fix-engineio-minimal.js
+COPY fix-engineio-final.js /tmp/fix-engineio-final.js
 
 # RUN echo "=== Структура engine.io ===" && \
 #     ls -la /opt/outline/node_modules/engine.io/ && \
@@ -72,6 +73,7 @@ RUN node /tmp/patch-engineio-complete.js
 # RUN node /tmp/fix-broken-socketio.js
 # RUN node /tmp/check-patches.js
 # RUN node /tmp/fix-engineio-minimal.js
+RUN node /tmp/fix-engineio-final.js
 
 # RUN echo "Патчинг Outline websockets.js..." && \
 #     if [ -f "/opt/outline/build/server/services/websockets.js" ]; then \
