@@ -39,7 +39,7 @@ services:
       - SOCKETIO_CORS_ORIGIN=*
       - DISABLE_ORIGIN_CHECK=true
       - WEBSOCKET_PATH=/realtime
-      - SOCKET_PATH=/realtime
+      - SOCKETIO_PATH=/realtime
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
 
       # Включение гостевого доступа (публичного)
@@ -57,9 +57,9 @@ services:
       - FORCE_HTTPS=true
       - NODE_ENV=production
       - PORT=3000
-      - TRUST_PROXY=2
+      - TRUST_PROXY=true
       - PROXY_SSL=true
-      - PROXY_TRUST=loopback,uniquelocal,172.18.0.0/16,172.16.2.126
+      - PROXY_TRUST=loopback,172.16.2.126,172.18.0.0/16
       - PROXY=true
 
       - FILE_STORAGE=local
@@ -74,10 +74,10 @@ services:
       - DEBUG=engine*,socket*
 
       # Отключаем все проверки WebSocket
-      - ENGINE_IO_DISABLE_MIDDLEWARE=true
+      - ENGINE_IO_DISABLE_MIDDLEWARE=false
       - ENGINE_IO_ALLOW_UPGRADE=true
       # Форсируем WebSocket без проверок
-      - SOCKETIO_TRANSPORTS='["websocket"]'
+      - SOCKETIO_TRANSPORTS='["websocket", "polling"]'
 
       # TUSUR интеграция
       - TUSUR_REDIS_HOST=redis.tusur.ru
