@@ -20,6 +20,8 @@ services:
     image: outlinewiki/outline:latest
     user: "1000:1000"
     environment:
+      - HOST=0.0.0.0
+      - PORT=3000
       - SECRET_KEY=ec1e220d522db0a2d4d3d4ece31f0b372d44b33dd02ebd070cbb0691832eea31
       - UTILS_SECRET=9c945224da5f17bd0fa9958c5835e06cf3b9cb7a75e2ad1a0773e54910cb8e9d
       - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
@@ -57,9 +59,9 @@ services:
       - FORCE_HTTPS=true
       - NODE_ENV=production
       - PORT=3000
-      - TRUST_PROXY=true
+      - TRUST_PROXY=2
       - PROXY_SSL=true
-      - PROXY_TRUST=loopback,172.16.2.126,172.18.0.0/16
+      - PROXY_TRUST=loopback,uniquelocal,172.16.0.0/12,172.18.0.0/16,10.0.0.0/8
       - PROXY=true
 
       - FILE_STORAGE=local
@@ -67,14 +69,14 @@ services:
       - MAX_IMAGE_UPLOAD_SIZE=10485760
 
       - COOKIE_DOMAIN=.outline-docs.tusur.ru
-      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ruPROXY
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
       - LOG_LEVEL=debug
-      - DEBUG=engine*,socket*
+      - DEBUG=socket.io:*,engine.io:*,engine*
 
       # Отключаем все проверки WebSocket
-      - ENGINE_IO_DISABLE_MIDDLEWARE=false
+      - ENGINE_IO_DISABLE_MIDDLEWARE=true
       - ENGINE_IO_ALLOW_UPGRADE=true
       # Форсируем WebSocket без проверок
       - SOCKETIO_TRANSPORTS='["websocket", "polling"]'
