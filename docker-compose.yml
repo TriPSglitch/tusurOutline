@@ -20,14 +20,11 @@ services:
     image: outlinewiki/outline:latest
     user: "1000:1000"
     environment:
-      - HOST=0.0.0.0
       - SECRET_KEY=ec1e220d522db0a2d4d3d4ece31f0b372d44b33dd02ebd070cbb0691832eea31
       - UTILS_SECRET=9c945224da5f17bd0fa9958c5835e06cf3b9cb7a75e2ad1a0773e54910cb8e9d
       - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
       - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
       - REDIS_URL=redis://redis:6379/0
-      - SOCKETIO_ADAPTOR=@socket.io/redis-adapter
-      - SOCKETIO_STICKY=false
       - REDIS_COLLABORATION_URL=redis://redis:6379/1
       - URL=https://outline-docs.tusur.ru
       - COLLABORATION_URL=wss://outline-docs.tusur.ru
@@ -59,8 +56,6 @@ services:
       # Настройки SSL/HTTPS
       - FORCE_HTTPS=true
       - NODE_ENV=production
-      - WEB_CONCURRENCY=1
-      - NODE_OPTIONS=--max-old-space-size=4096
       - PORT=3000
       - TRUST_PROXY=2
       - PROXY_SSL=true
@@ -72,7 +67,7 @@ services:
       - MAX_IMAGE_UPLOAD_SIZE=10485760
 
       - COOKIE_DOMAIN=.outline-docs.tusur.ru
-      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ruPROXY
+      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
       - SECURE_COOKIES=true
       - SAME_SITE_COOKIE=lax
       - LOG_LEVEL=debug
@@ -83,7 +78,6 @@ services:
       - ENGINE_IO_ALLOW_UPGRADE=true
       # Форсируем WebSocket без проверок
       - SOCKETIO_TRANSPORTS='["websocket", "polling"]'
-      - SOCKETIO_ALLOW_REQUEST=*
 
       # TUSUR интеграция
       - TUSUR_REDIS_HOST=redis.tusur.ru

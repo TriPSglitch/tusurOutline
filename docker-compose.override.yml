@@ -4,7 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - HOST=0.0.0.0
       # Основные настройки
       - SECRET_KEY=${SECRET_KEY}
       - UTILS_SECRET=${UTILS_SECRET}
@@ -55,8 +54,6 @@ services:
 
       # Debug
       - NODE_ENV=production
-      - WEB_CONCURRENCY=1
-      - NODE_OPTIONS=--max-old-space-size=4096
       - LOG_LEVEL=debug
       - DEBUG=socket.io:*,engine.io:*,engine*
 
@@ -71,9 +68,6 @@ services:
       - ENGINE_IO_ALLOW_UPGRADE=true
       # Форсируем WebSocket без проверок
       - SOCKETIO_TRANSPORTS='["websocket", "polling"]'
-      - SOCKETIO_ALLOW_REQUEST=*
-      - SOCKETIO_ADAPTOR=@socket.io/redis-adapter
-      - SOCKETIO_STICKY=false
 
     extra_hosts:
       - "redis.tusur.ru:${TUSUR_REDIS_IP}"
