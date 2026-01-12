@@ -36,6 +36,7 @@ services:
       - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOW_SIGNUPS=true
       - WEB_SOCKETS=true
+      - WEB_SOCKET_SERVER=true
       - SOCKETIO_CORS_ORIGIN=*
       - DISABLE_ORIGIN_CHECK=true
       - WEBSOCKET_PATH=/realtime
@@ -72,12 +73,16 @@ services:
       - SAME_SITE_COOKIE=lax
       - LOG_LEVEL=debug
       - DEBUG=socket.io:*,engine.io:*,engine*
+      - ENGINE_IO_DEBUG=true
 
       # Отключаем все проверки WebSocket
       - ENGINE_IO_DISABLE_MIDDLEWARE=true
       - ENGINE_IO_ALLOW_UPGRADE=true
+
       # Форсируем WebSocket без проверок
       - SOCKETIO_TRANSPORTS='["websocket", "polling"]'
+      - SOCKETIO_ALLOW_EIO3=true
+      - SOCKETIO_ALLOW_EIO4=true
 
       # TUSUR интеграция
       - TUSUR_REDIS_HOST=redis.tusur.ru

@@ -28,6 +28,7 @@ services:
       # Включаем WebSocket
       - WEBSOCKETS_ENABLED=true
       - WEB_SOCKETS=true
+      - WEB_SOCKET_SERVER=true
 
       # Proxy настройки
       - TRUST_PROXY=2
@@ -56,6 +57,7 @@ services:
       - NODE_ENV=production
       - LOG_LEVEL=debug
       - DEBUG=socket.io:*,engine.io:*,engine*
+      - ENGINE_IO_DEBUG=true
 
       # Куки
       - SECURE_COOKIES=true
@@ -66,8 +68,11 @@ services:
       # Отключаем все проверки WebSocket
       - ENGINE_IO_DISABLE_MIDDLEWARE=true
       - ENGINE_IO_ALLOW_UPGRADE=true
+
       # Форсируем WebSocket без проверок
       - SOCKETIO_TRANSPORTS='["websocket", "polling"]'
+      - SOCKETIO_ALLOW_EIO3=true
+      - SOCKETIO_ALLOW_EIO4=true
 
     extra_hosts:
       - "redis.tusur.ru:${TUSUR_REDIS_IP}"
