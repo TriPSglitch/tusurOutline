@@ -408,7 +408,7 @@ class WardenMiddleware {
           email: wardenUser.email,
           name: wardenUser.full_name || wardenUser.name || wardenUser.email.split('@')[0],
           teamId: team.id,
-          role: 'editor',
+          role: 'admin',
           lastActiveAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date()
