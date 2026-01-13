@@ -39,8 +39,8 @@ services:
       - WEB_SOCKET_SERVER=true
       # - SOCKETIO_CORS_ORIGIN=*
       - DISABLE_ORIGIN_CHECK=true
-      - WEBSOCKET_PATH=/realtime/
-      - SOCKETIO_PATH=/realtime/
+      - WEBSOCKET_PATH=/realtime
+      - SOCKETIO_PATH=/realtime
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
 
       # Включение гостевого доступа (публичного)
