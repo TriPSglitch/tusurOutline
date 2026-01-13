@@ -70,7 +70,8 @@ services:
       - ENGINE_IO_ALLOW_UPGRADE=true
 
       # Форсируем WebSocket без проверок
-      - SOCKETIO_TRANSPORTS='["websocket", "polling"]'
+      - SOCKETIO_ALLOW_UPGRADES=true
+      - SOCKETIO_TRANSPORTS='["polling", "websocket"]'
       - SOCKETIO_ALLOW_EIO3=true
       - SOCKETIO_ALLOW_EIO4=true
 
