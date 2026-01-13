@@ -108,7 +108,13 @@ class WardenMiddleware {
         return next();
       }
 
-      if (path.startsWith('/realtime/') || path.startsWith('/collaboration/')) {
+      if (path.startsWith('/realtime/') || path.startsWith('/realtime')) {
+        return next();
+      }
+
+      if (path.startsWith('/collaboration/')) {
+
+        // if (path.startsWith('/realtime/') || path.startsWith('/collaboration/')) {
         console.log(`[TUSUR WebSocket] WebSocket запрос: ${path}`);
 
         // Получаем токен из cookies
