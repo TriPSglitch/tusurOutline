@@ -45,10 +45,10 @@ RUN echo "=== Outline structure ===" && \
     ls -la /opt/outline/build/server/ 2>/dev/null | head -20
 
 # Копируем исправленный патч WebSocket
-COPY grand-fix-backup.js /tmp/grand-fix-backup.js
-RUN node /tmp/grand-fix-backup.js
-COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
-RUN node /tmp/fix-typescript-in-index.js
+# COPY grand-fix-backup.js /tmp/grand-fix-backup.js
+# RUN node /tmp/grand-fix-backup.js
+# COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
+# RUN node /tmp/fix-typescript-in-index.js
 
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
