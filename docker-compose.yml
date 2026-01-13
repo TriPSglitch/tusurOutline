@@ -37,10 +37,12 @@ services:
       - ALLOW_SIGNUPS=true
       - WEB_SOCKETS=true
       - WEB_SOCKET_SERVER=true
-      # - SOCKETIO_CORS_ORIGIN=*
+      - SOCKETIO_CORS_ORIGIN=*
+      - SOCKETIO_CORS_CREDENTIALS=true
+      - NODE_OPTIONS=--max-http-header-size=16384
       - DISABLE_ORIGIN_CHECK=true
-      - WEBSOCKET_PATH=/realtime
-      - SOCKETIO_PATH=/realtime
+      - WEBSOCKET_PATH=/realtime/
+      - SOCKETIO_PATH=/realtime/
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
 
       # Включение гостевого доступа (публичного)

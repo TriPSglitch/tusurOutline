@@ -19,8 +19,8 @@ services:
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
       - COLLABORATION_URL=wss://outline-docs.tusur.ru
       - REALTIME_URL=wss://outline-docs.tusur.ru
-      - SOCKETIO_PATH=/realtime
-      - WEBSOCKET_PATH=/realtime
+      - SOCKETIO_PATH=/realtime/
+      - WEBSOCKET_PATH=/realtime/
 
       # Отключаем принудительный HTTPS
       - FORCE_HTTPS=true
@@ -39,8 +39,10 @@ services:
       # CORS и Origin
       # - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOWED_DOMAINS=outline-docs.tusur.ru
-      # - SOCKETIO_CORS_ORIGIN=*
+      - SOCKETIO_CORS_ORIGIN=*
       - DISABLE_ORIGIN_CHECK=true
+      - SOCKETIO_CORS_CREDENTIALS=true
+      - NODE_OPTIONS=--max-http-header-size=16384
 
       # Публичный доступ
       - ALLOW_VIEWERS=true
