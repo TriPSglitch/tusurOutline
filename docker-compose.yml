@@ -78,14 +78,14 @@ services:
       - ENGINE_IO_DEBUG=true
 
       # Отключаем все проверки WebSocket
-      - ENGINE_IO_DISABLE_MIDDLEWARE=true
-      - ENGINE_IO_ALLOW_UPGRADE=true
+      # - ENGINE_IO_DISABLE_MIDDLEWARE=true
+      # - ENGINE_IO_ALLOW_UPGRADE=true
 
       # Форсируем WebSocket без проверок
-      - SOCKETIO_ALLOW_UPGRADES=true
-      - SOCKETIO_TRANSPORTS='["polling", "websocket"]'
-      - SOCKETIO_ALLOW_EIO3=true
-      - SOCKETIO_ALLOW_EIO4=true
+      # - SOCKETIO_ALLOW_UPGRADES=true
+      # - SOCKETIO_TRANSPORTS='["polling", "websocket"]'
+      # - SOCKETIO_ALLOW_EIO3=true
+      # - SOCKETIO_ALLOW_EIO4=true
 
       # TUSUR интеграция
       - TUSUR_REDIS_HOST=redis.tusur.ru
