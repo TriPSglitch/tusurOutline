@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y curl && apt-get clean
 RUN mkdir -p /opt/outline/plugins/tusur-warden
 
 # Копируем плагин
-COPY outline-tusur-warden-plugin/src/ /opt/outline/plugins/tusur-warden/
+# COPY outline-tusur-warden-plugin/src/ /opt/outline/plugins/tusur-warden/
 
 # Создаем config директорию
 RUN mkdir -p /opt/outline/config/tusur
@@ -40,9 +40,9 @@ RUN npm install ioredis @koa/router
 # Возвращаемся в основную директорию
 WORKDIR /opt/outline
 
-RUN echo "=== Outline structure ===" && \
-    find /opt/outline/build -name "*.js" -type f | xargs grep -l "socketIo\|engine.io" 2>/dev/null | head -10 && \
-    ls -la /opt/outline/build/server/ 2>/dev/null | head -20
+# RUN echo "=== Outline structure ===" && \
+#     find /opt/outline/build -name "*.js" -type f | xargs grep -l "socketIo\|engine.io" 2>/dev/null | head -10 && \
+#     ls -la /opt/outline/build/server/ 2>/dev/null | head -20
 
 # Копируем исправленный патч WebSocket
 # COPY grand-fix-backup.js /tmp/grand-fix-backup.js
