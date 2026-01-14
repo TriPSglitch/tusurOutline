@@ -85,6 +85,7 @@ services:
       # Форсируем WebSocket без проверок
       # - SOCKETIO_ALLOW_UPGRADES=true
       # - SOCKETIO_TRANSPORTS='["polling", "websocket"]'
+      - SOCKETIO_TRANSPORTS=websocket
       # - SOCKETIO_ALLOW_EIO3=true
       # - SOCKETIO_ALLOW_EIO4=true
 
