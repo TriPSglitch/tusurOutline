@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y curl && apt-get clean
 RUN mkdir -p /opt/outline/plugins/tusur-warden
 
 # Копируем плагин
-# COPY outline-tusur-warden-plugin/src/ /opt/outline/plugins/tusur-warden/
+COPY outline-tusur-warden-plugin/src/ /opt/outline/plugins/tusur-warden/
 
 # Создаем config директорию
 RUN mkdir -p /opt/outline/config/tusur
