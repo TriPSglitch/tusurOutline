@@ -126,8 +126,10 @@ class WardenMiddleware {
           // КРИТИЧЕСКИ ВАЖНО: устанавливаем токен в query параметры
           // Outline Socket.IO ищет токен в query, а не в cookies
           ctx.query.accessToken = accessToken;
+          ctx.headers['authorization'] = `Bearer ${accessToken}`;
           ctx.url += (ctx.url.includes('?') ? '&' : '?') + `accessToken=${accessToken}`;
           console.log(`[TUSUR WebSocket] Токен установлен в url = ${ctx.url}`);
+          console.log(`[TUSUR WS] Токен успешно проброшен для ${path}`);
 /*
           // Также аутентифицируем пользователя
           const tokenUser = await this.validateWebSocketToken(accessToken);
