@@ -107,8 +107,8 @@ class WardenMiddleware {
       if (method === 'OPTIONS') {
         return next();
       }
-
-      if (path.startsWith('/realtime/') || path.startsWith('/realtime')) {
+ 
+      if (path.includes('/realtime') || path.includes('/socket.io')) {
         return next();
       }
 
