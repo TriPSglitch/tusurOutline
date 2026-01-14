@@ -107,12 +107,12 @@ class WardenMiddleware {
       if (method === 'OPTIONS') {
         return next();
       }
- 
+ /*
       if (path.includes('/realtime') || path.includes('/socket.io')) {
         return next();
       }
-
-      if (path.startsWith('/collaboration/')) {
+*/
+      if (path.includes('/collaboration') || path.includes('/realtime') || path.includes('/soket.io')) {
 
         // if (path.startsWith('/realtime/') || path.startsWith('/collaboration/')) {
         console.log(`[TUSUR WebSocket] WebSocket запрос: ${path}`);
@@ -120,14 +120,15 @@ class WardenMiddleware {
         // Получаем токен из cookies
         const accessToken = ctx.cookies.get('accessToken');
 
-        if (accessToken) {
+        if (accessToken && !ctx.query.accessToken) {
           console.log(`[TUSUR WebSocket] Найден accessToken: ${accessToken.substring(0, 30)}...`);
 
           // КРИТИЧЕСКИ ВАЖНО: устанавливаем токен в query параметры
           // Outline Socket.IO ищет токен в query, а не в cookies
-          ctx.query.accessToken = accessToken;
-          console.log(`[TUSUR WebSocket] Токен установлен в query: accessToken=${accessToken.substring(0, 20)}...`);
-
+          //ctx.query.accessToken = accessToken;
+          ctx.url += (ctx.url.includes('?') ? '&' : '?') + `accessToken=${accessToken}`;
+          console.log(`[TUSUR WebSocket] Токен установлен в url = ${ctx.url}`);
+/*
           // Также аутентифицируем пользователя
           const tokenUser = await this.validateWebSocketToken(accessToken);
           if (tokenUser) {
@@ -140,7 +141,7 @@ class WardenMiddleware {
             ctx.set('X-User-Email', tokenUser.email);
           }
         } else {
-          console.log(`[TUSUR WebSocket] Нет accessToken в cookies`);
+          console.log(`[TUSUR WebSocket] Нет accessToken в cookies`);*/
         }
 
         return next();
