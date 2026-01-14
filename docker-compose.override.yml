@@ -20,8 +20,9 @@ services:
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
       # - COLLABORATION_URL=wss://outline-docs.tusur.ru
       # - REALTIME_URL=wss://outline-docs.tusur.ru
-      - SOCKETIO_PATH=/realtime/
+      - SOCKETIO_PATH=/realtime
       # - WEBSOCKET_PATH=/realtime/
+      - SOCKETIO_TRANSPORTS=websocket
 
       # Отключаем принудительный HTTPS
       - FORCE_HTTPS=true

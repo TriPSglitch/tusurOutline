@@ -42,7 +42,8 @@ services:
       - NODE_OPTIONS=--max-http-header-size=16384
       - DISABLE_ORIGIN_CHECK=true
       # - WEBSOCKET_PATH=/realtime/
-      - SOCKETIO_PATH=/realtime/
+      - SOCKETIO_PATH=/realtime
+      - SOCKETIO_TRANSPORTS=websocket
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
       - WEB_CONCURRENCY=1
 
