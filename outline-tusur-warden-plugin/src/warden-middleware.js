@@ -416,7 +416,7 @@ class WardenMiddleware {
         return null;
       }
 
-      // 1. Найти/создать пользователя (ваш существующий код)
+      // 1. Найти/создать пользователя
       let outlineUser = await User.findOne({
         where: { email: wardenUser.email }
       });
