@@ -7,9 +7,6 @@ echo "User: $(whoami)"
 echo "UID: $(id -u)"
 echo "GID: $(id -g)"
 
-# Проверяем права
-ls -la /opt/outline/build/server/websockets/ 2>/dev/null || echo "WebSocket directory not found"
-
 # Проверяем существование плагина
 if [ -f "plugins/tusur-warden/index.js" ]; then
     echo "TUSUR плагин найден"
