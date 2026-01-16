@@ -217,19 +217,8 @@ class WardenMiddleware {
 
   isPathPublic(path, publicPaths) {
     if (path.startsWith('/collaboration/')) {
-      return false; // Требует аутентификации
+      return false;
     }
-    /*
-    // Пропускаем WebSocket запросы - они обрабатываются отдельно
-    if (ctx.headers.upgrade && ctx.headers.upgrade.toLowerCase() === 'websocket') {
-      return false; // Требует специальной обработки
-    }
-    
-    // Добавьте /realtime/ в публичные пути или обрабатывайте отдельно
-    if (path.startsWith('/realtime/')) {
-      return false; // Обрабатывается в WebSocket секции
-    }
-    */
 
     // Точное совпадение
     if (publicPaths.includes(path)) {

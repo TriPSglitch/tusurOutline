@@ -19,11 +19,16 @@ services:
     restart: unless-stopped
 
   outline:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: outlinewiki/outline:latest
     user: "1000:1000"
     restart: unless-stopped
     ports:
       - "3000:3000"
+    extra_hosts:
+      - "redis.tusur.ru:${TUSUR_REDIS_IP}"
     depends_on:
       - redis
       - postgres

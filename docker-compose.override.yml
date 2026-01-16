@@ -6,6 +6,5 @@ services:
       context: .
       dockerfile: Dockerfile
     
-    # Дополнительные хосты нужны только в специфичном окружении
     extra_hosts:
       - "redis.tusur.ru:${TUSUR_REDIS_IP}"
