@@ -40,51 +40,10 @@ RUN npm install ioredis @koa/router
 # Возвращаемся в основную директорию
 WORKDIR /opt/outline
 
-# RUN echo "=== Outline structure ===" && \
-#     find /opt/outline/build -name "*.js" -type f | xargs grep -l "socketIo\|engine.io" 2>/dev/null | head -10 && \
-#     ls -la /opt/outline/build/server/ 2>/dev/null | head -20
-
-# Копируем исправленный патч WebSocket
-# COPY grand-fix-backup.js /tmp/grand-fix-backup.js
-# RUN node /tmp/grand-fix-backup.js
-# COPY fix-typescript-in-index.js /tmp/fix-typescript-in-index.js
-# RUN node /tmp/fix-typescript-in-index.js
-
 # Копируем patch файлы
 COPY patch-server.js /tmp/patch-server.js
-# COPY fix-env.js /tmp/fix-env.js
-# COPY fix-websocket-correct.js /tmp/fix-websocket-correct.js
-# COPY patch-websocket-final.js /tmp/patch-websocket-final.js
-# COPY patch-engineio-complete.js /tmp/patch-engineio-complete.js
-# COPY fix-broken-socketio.js /tmp/fix-broken-socketio.js
-# COPY check-patches.js /tmp/check-patches.js
-# COPY fix-engineio-minimal.js /tmp/fix-engineio-minimal.js
-
-# RUN echo "=== Структура engine.io ===" && \
-#     ls -la /opt/outline/node_modules/engine.io/ && \
-#     ls -la /opt/outline/node_modules/engine.io/build/
 
 RUN node /tmp/patch-server.js
-# RUN node /tmp/fix-env.js
-# RUN node /tmp/fix-websocket-correct.js
-# RUN node /tmp/patch-websocket-final.js
-# RUN node /tmp/patch-engineio-complete.js
-# RUN node /tmp/fix-broken-socketio.js
-# RUN node /tmp/check-patches.js
-# RUN node /tmp/fix-engineio-minimal.js
-
-# RUN echo "Патчинг Outline websockets.js..." && \
-#     if [ -f "/opt/outline/build/server/services/websockets.js" ]; then \
-#         cp /opt/outline/build/server/services/websockets.js /opt/outline/build/server/services/websockets.js.backup && \
-#         sed -i 's/origin: "https:\/\/outline-docs.tusur.ru"/origin: "*"/g' /opt/outline/build/server/services/websockets.js && \
-#         echo "✓ Outline websockets.js исправлен (CORS)"; \
-#     fi
-
-# RUN echo "=== Проверка патчей ===" && \
-#     grep -l "TUSUR" /opt/outline/node_modules/engine.io/build/server.js 2>/dev/null && \
-#     echo "✓ Engine.io пропатчен" || echo "✗ Engine.io не пропатчен" && \
-#     grep -l "TUSUR" /opt/outline/build/server/services/websockets.js 2>/dev/null && \
-#     echo "✓ Outline websockets пропатчен" || echo "✗ Outline websockets не пропатчен"
 
 # Копируем entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
