@@ -1,11 +1,91 @@
-version: "3.9"
-
 services:
   outline:
     build:
       context: .
       dockerfile: Dockerfile
-    
-    # Дополнительные хосты нужны только в специфичном окружении
+    environment:
+      # Основные настройки
+      - SECRET_KEY=${SECRET_KEY}
+      - UTILS_SECRET=${UTILS_SECRET}
+      - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_COLLABORATION_URL=redis://redis:6379/1
+      - WEB_CONCURRENCY=1
+
+      # URL
+      - URL=https://outline-docs.tusur.ru
+      # - PUBLIC_URL=https://outline-docs.tusur.ru
+
+      # WebSocket URLs
+      - WEBSOCKET_URL=wss://outline-docs.tusur.ru
+      # - COLLABORATION_URL=wss://outline-docs.tusur.ru
+      # - REALTIME_URL=wss://outline-docs.tusur.ru
+      - SOCKETIO_PATH=/realtime
+      # - WEBSOCKET_PATH=/realtime/
+
+      # Отключаем принудительный HTTPS
+      - FORCE_HTTPS=true
+
+      # Включаем WebSocket
+      - WEBSOCKETS_ENABLED=true
+      # - WEB_SOCKETS=true
+      # - WEB_SOCKET_SERVER=true
+
+      # Proxy настройки
+      - TRUST_PROXY=true
+      - PROXY=true
+      - PROXY_SSL=true
+      # - PROXY_TRUST=loopback,uniquelocal,172.16.0.0/12,172.18.0.0/16,10.0.0.0/8
+
+      # CORS и Origin
+      # - CORS_ORIGIN=https://outline-docs.tusur.ru
+      - ALLOWED_DOMAINS=outline-docs.tusur.ru
+      - SOCKETIO_CORS_ORIGIN=*
+      - DISABLE_ORIGIN_CHECK=true
+      - SOCKETIO_CORS_CREDENTIALS=true
+      - NODE_OPTIONS=--max-http-header-size=32768
+
+      # Публичный доступ
+      - ALLOW_VIEWERS=true
+      - ALLOW_SIGNUPS=true
+      - FORCE_PUBLIC_SITE=true
+      - ALLOW_PUBLIC_SHARING=true
+
+      # TUSUR интеграция
+      - TUSUR_REDIS_HOST=redis.tusur.ru
+      - TUSUR_REDIS_PORT=6379
+      - TUSUR_SSO_ENABLED=true
+
+      # Debug
+      - NODE_ENV=production
+      - LOG_LEVEL=debug
+      - DEBUG=socket.io:*,engine.io:*,engine*
+      - ENGINE_IO_DEBUG=true
+
+      # Куки
+      - SECURE_COOKIES=true
+      - SAME_SITE_COOKIE=lax
+      - COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
+
+      # Отключаем все проверки WebSocket
+      # - ENGINE_IO_DISABLE_MIDDLEWARE=true
+      # - ENGINE_IO_ALLOW_UPGRADE=true
+
+      # Форсируем WebSocket без проверок
+      # - SOCKETIO_ALLOW_UPGRADES=true
+      # - SOCKETIO_TRANSPORTS='["polling", "websocket"]'
+      - SOCKETIO_TRANSPORTS=websocket
+      # - SOCKETIO_ALLOW_EIO3=true
+      # - SOCKETIO_ALLOW_EIO4=true
+
     extra_hosts:
       - "redis.tusur.ru:${TUSUR_REDIS_IP}"
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - outline_data:/var/lib/outline/data
+      - outline_uploads:/var/lib/outline/uploads
+      - ./ssl:/ssl

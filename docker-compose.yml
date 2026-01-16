@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   redis:
     image: redis:7-alpine
@@ -21,77 +19,91 @@ services:
   outline:
     image: outlinewiki/outline:latest
     user: "1000:1000"
-    restart: unless-stopped
+    environment:
+      - SECRET_KEY=ec1e220d522db0a2d4d3d4ece31f0b372d44b33dd02ebd070cbb0691832eea31
+      - UTILS_SECRET=9c945224da5f17bd0fa9958c5835e06cf3b9cb7a75e2ad1a0773e54910cb8e9d
+      - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
+      - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_COLLABORATION_URL=redis://redis:6379/1
+      - URL=https://outline-docs.tusur.ru
+      # - COLLABORATION_URL=wss://outline-docs.tusur.ru
+      # - PUBLIC_URL=https://outline-docs.tusur.ru
+      # - REALTIME_URL=wss://outline-docs.tusur.ru
+      - WEBSOCKETS_ENABLED=true
+      - PGSSLMODE=disable
+      - ALLOWED_DOMAINS=outline-docs.tusur.ru
+      # - CORS_ORIGIN=https://outline-docs.tusur.ru
+      - ALLOW_SIGNUPS=true
+      # - WEB_SOCKETS=true
+      # - WEB_SOCKET_SERVER=true
+      - SOCKETIO_CORS_ORIGIN=*
+      - SOCKETIO_CORS_CREDENTIALS=true
+      - NODE_OPTIONS=--max-http-header-size=16384
+      - DISABLE_ORIGIN_CHECK=true
+      # - WEBSOCKET_PATH=/realtime/
+      - SOCKETIO_PATH=/realtime
+      - WEBSOCKET_URL=wss://outline-docs.tusur.ru
+      - WEB_CONCURRENCY=1
+
+      # Включение гостевого доступа (публичного)
+      - FORCE_PUBLIC_SITE=true
+      - FEATURE_PUBLIC_SHARING=true
+
+      # Настройки для публичного доступа
+      - COLLECTION_DEFAULT_VIEW=read
+      - DOCUMENT_DEFAULT_VIEW=read
+      - ALLOW_PUBLIC_SHARING=true
+      - ALLOW_VIEWERS=true
+      - SHARING=true
+
+      # Настройки SSL/HTTPS
+      - FORCE_HTTPS=true
+      - NODE_ENV=production
+      - PORT=3000
+      - TRUST_PROXY=true
+      - PROXY_SSL=true
+      # - PROXY_TRUST=loopback,uniquelocal,172.16.0.0/12,172.18.0.0/16,10.0.0.0/8
+      - PROXY=true
+
+      - FILE_STORAGE=local
+      - FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
+      - MAX_IMAGE_UPLOAD_SIZE=10485760
+
+      - COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
+      - SECURE_COOKIES=true
+      - SAME_SITE_COOKIE=lax
+      - LOG_LEVEL=debug
+      - DEBUG=socket.io:*,engine.io:*,engine*
+      - ENGINE_IO_DEBUG=true
+
+      # Отключаем все проверки WebSocket
+      # - ENGINE_IO_DISABLE_MIDDLEWARE=true
+      # - ENGINE_IO_ALLOW_UPGRADE=true
+
+      # Форсируем WebSocket без проверок
+      # - SOCKETIO_ALLOW_UPGRADES=true
+      # - SOCKETIO_TRANSPORTS='["polling", "websocket"]'
+      - SOCKETIO_TRANSPORTS=websocket
+      # - SOCKETIO_ALLOW_EIO3=true
+      # - SOCKETIO_ALLOW_EIO4=true
+
+      # TUSUR интеграция
+      - TUSUR_REDIS_HOST=redis.tusur.ru
+      - TUSUR_REDIS_PORT=6379
+      - TUSUR_SSO_ENABLED=true
+
+    volumes:
+      - outline_data:/var/lib/outline/data
+      - outline_uploads:/var/lib/outline/uploads
+      - ./ssl:/ssl
     ports:
       - "3000:3000"
     depends_on:
       - redis
       - postgres
-    volumes:
-      - outline_data:/var/lib/outline/data
-      - outline_uploads:/var/lib/outline/uploads
-      - ./ssl:/ssl
-    environment:
-      # --- System & Security ---
-      - NODE_ENV=production
-      - SECRET_KEY=ec1e220d522db0a2d4d3d4ece31f0b372d44b33dd02ebd070cbb0691832eea31
-      - UTILS_SECRET=9c945224da5f17bd0fa9958c5835e06cf3b9cb7a75e2ad1a0773e54910cb8e9d
-      - WEB_CONCURRENCY=1
-      - LOG_LEVEL=debug
-      
-      # --- Connection & URLs ---
-      - URL=https://outline-docs.tusur.ru
-      - PORT=3000
-      - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
-      - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
-      - PGSSLMODE=disable
-      - REDIS_URL=redis://redis:6379/0
-      - REDIS_COLLABORATION_URL=redis://redis:6379/1
-      
-      # --- Network / Proxy / CORS ---
-      - FORCE_HTTPS=true
-      - TRUST_PROXY=true
-      - PROXY=true
-      - PROXY_SSL=true
-      - ALLOWED_DOMAINS=outline-docs.tusur.ru
-      - DISABLE_ORIGIN_CHECK=true
-      - NODE_OPTIONS=--max-http-header-size=32768
-      
-      # --- WebSockets ---
-      - WEBSOCKETS_ENABLED=true
-      - WEBSOCKET_URL=wss://outline-docs.tusur.ru
-      - SOCKETIO_PATH=/realtime
-      - SOCKETIO_TRANSPORTS=websocket
-      - SOCKETIO_CORS_ORIGIN=*
-      - SOCKETIO_CORS_CREDENTIALS=true
-      - DEBUG=socket.io:*,engine.io:*,engine*
-      - ENGINE_IO_DEBUG=true
-
-      # --- Storage ---
-      - FILE_STORAGE=local
-      - FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
-      - MAX_IMAGE_UPLOAD_SIZE=10485760
-
-      # --- Cookies ---
-      - COOKIE_DOMAIN=.outline-docs.tusur.ru
-      - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
-      - SECURE_COOKIES=true
-      - SAME_SITE_COOKIE=lax
-
-      # --- Public Access & Features ---
-      - FORCE_PUBLIC_SITE=true
-      - FEATURE_PUBLIC_SHARING=true
-      - ALLOW_PUBLIC_SHARING=true
-      - ALLOW_VIEWERS=true
-      - ALLOW_SIGNUPS=true
-      - SHARING=true
-      - COLLECTION_DEFAULT_VIEW=read
-      - DOCUMENT_DEFAULT_VIEW=read
-
-      # --- External Integrations (TUSUR) ---
-      - TUSUR_REDIS_HOST=redis.tusur.ru
-      - TUSUR_REDIS_PORT=6379
-      - TUSUR_SSO_ENABLED=true
+    restart: unless-stopped
 
 volumes:
   redis_data:
