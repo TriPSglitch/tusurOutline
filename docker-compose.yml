@@ -38,15 +38,17 @@ services:
       - UTILS_SECRET=9c945224da5f17bd0fa9958c5835e06cf3b9cb7a75e2ad1a0773e54910cb8e9d
       - WEB_CONCURRENCY=1
       - LOG_LEVEL=debug
-
+      
       # --- Connection & URLs ---
       - URL=https://outline-docs.tusur.ru
       - PORT=3000
       - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
       - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
+      # !!! ВЕРНУЛ ВАЖНУЮ СТРОКУ НИЖЕ !!!
+      - PGSSLMODE=disable
       - REDIS_URL=redis://redis:6379/0
       - REDIS_COLLABORATION_URL=redis://redis:6379/1
-
+      
       # --- Network / Proxy / CORS ---
       - FORCE_HTTPS=true
       - TRUST_PROXY=true
@@ -55,7 +57,7 @@ services:
       - ALLOWED_DOMAINS=outline-docs.tusur.ru
       - DISABLE_ORIGIN_CHECK=true
       - NODE_OPTIONS=--max-http-header-size=32768
-
+      
       # --- WebSockets ---
       - WEBSOCKETS_ENABLED=true
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
