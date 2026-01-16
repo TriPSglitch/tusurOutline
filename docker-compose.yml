@@ -44,7 +44,6 @@ services:
       - PORT=3000
       - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
       - DATABASE_URL_TEST=postgres://outline:outline123@postgres:5432/outline_test
-      # !!! ВЕРНУЛ ВАЖНУЮ СТРОКУ НИЖЕ !!!
       - PGSSLMODE=disable
       - REDIS_URL=redis://redis:6379/0
       - REDIS_COLLABORATION_URL=redis://redis:6379/1
