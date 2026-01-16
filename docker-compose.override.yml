@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     environment:
       # Основные настройки
+      - URL=https://outline-docs.tusur.ru
       - SECRET_KEY=${SECRET_KEY}
       - UTILS_SECRET=${UTILS_SECRET}
       - DATABASE_URL=postgres://outline:outline123@postgres:5432/outline
@@ -12,33 +13,21 @@ services:
       - REDIS_COLLABORATION_URL=redis://redis:6379/1
       - WEB_CONCURRENCY=1
 
-      # URL
-      - URL=https://outline-docs.tusur.ru
-      # - PUBLIC_URL=https://outline-docs.tusur.ru
-
-      # WebSocket URLs
-      - WEBSOCKET_URL=wss://outline-docs.tusur.ru
-      # - COLLABORATION_URL=wss://outline-docs.tusur.ru
-      # - REALTIME_URL=wss://outline-docs.tusur.ru
-      - SOCKETIO_PATH=/realtime
-      # - WEBSOCKET_PATH=/realtime/
-
-      # Отключаем принудительный HTTPS
-      - FORCE_HTTPS=true
-
-      # Включаем WebSocket
+      # WebSocket
       - WEBSOCKETS_ENABLED=true
-      # - WEB_SOCKETS=true
-      # - WEB_SOCKET_SERVER=true
+      - WEBSOCKET_URL=wss://outline-docs.tusur.ru
+      - SOCKETIO_PATH=/realtime/
+      - SOCKETIO_TRANSPORTS=websocket
+
+      # Включаем принудительный HTTPS
+      - FORCE_HTTPS=true
 
       # Proxy настройки
       - TRUST_PROXY=true
       - PROXY=true
       - PROXY_SSL=true
-      # - PROXY_TRUST=loopback,uniquelocal,172.16.0.0/12,172.18.0.0/16,10.0.0.0/8
 
       # CORS и Origin
-      # - CORS_ORIGIN=https://outline-docs.tusur.ru
       - ALLOWED_DOMAINS=outline-docs.tusur.ru
       - SOCKETIO_CORS_ORIGIN=*
       - DISABLE_ORIGIN_CHECK=true
@@ -67,17 +56,6 @@ services:
       - SAME_SITE_COOKIE=lax
       - COOKIE_DOMAIN=.outline-docs.tusur.ru
       - SESSION_COOKIE_DOMAIN=.outline-docs.tusur.ru
-
-      # Отключаем все проверки WebSocket
-      # - ENGINE_IO_DISABLE_MIDDLEWARE=true
-      # - ENGINE_IO_ALLOW_UPGRADE=true
-
-      # Форсируем WebSocket без проверок
-      # - SOCKETIO_ALLOW_UPGRADES=true
-      # - SOCKETIO_TRANSPORTS='["polling", "websocket"]'
-      - SOCKETIO_TRANSPORTS=websocket
-      # - SOCKETIO_ALLOW_EIO3=true
-      # - SOCKETIO_ALLOW_EIO4=true
 
     extra_hosts:
       - "redis.tusur.ru:${TUSUR_REDIS_IP}"

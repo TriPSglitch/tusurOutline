@@ -57,17 +57,13 @@ class TusurRedisClient {
       await this.userRedis.quit();
     }
   }
-
-  /**
-   * Получаем session_id из куков
-   */
+  
+  // Получаем session_id из куков
   getSessionIdFromCookies(ctx) {
     return ctx.cookies.get('_session_id');
   }
-
-  /**
-   * Получаем user_id из сессии Redis
-   */
+  
+  // Получаем user_id из сессии Redis
   async getUserIdFromSession(sessionId) {
     console.log('[TUSUR Redis DEBUG] Getting user ID for session: ' + sessionId);
     try {
@@ -104,10 +100,8 @@ class TusurRedisClient {
       return null;
     }
   }
-
-  /**
-   * Парсинг Rails сессии (альтернативный формат)
-   */
+  
+  // Парсинг Rails сессии (альтернативный формат)
   parseRailsSession(sessionData) {
     try {
       // Пробуем разные форматы сериализации
@@ -124,9 +118,7 @@ class TusurRedisClient {
     }
   }
 
-  /**
-   * Получаем данные пользователя из Redis
-   */
+  // Получаем данные пользователя из Redis
   async getUserData(userId) {
     try {
       const userKey = `user:${userId}`;
@@ -147,9 +139,7 @@ class TusurRedisClient {
     }
   }
 
-  /**
-   * Нормализация данных пользователя из Redis
-   */
+  // Нормализация данных пользователя из Redis
   normalizeUserData(redisData) {
     const user = {};
 
@@ -176,9 +166,7 @@ class TusurRedisClient {
     return user;
   }
 
-  /**
-   * Проверяем, активна ли сессия
-   */
+  // Проверяем, активна ли сессия
   async isSessionActive(sessionId) {
     try {
       const key = `session:${sessionId}`;
@@ -196,9 +184,7 @@ class TusurRedisClient {
     }
   }
 
-  /**
-   * Обновляем время последней активности в сервисе
-   */
+  // Обновляем время последней активности в сервисе
   async updateServiceActivity(userId, serviceName) {
     try {
       const serviceKey = `user:${userId}:services`;
