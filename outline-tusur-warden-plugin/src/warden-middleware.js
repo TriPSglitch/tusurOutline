@@ -343,6 +343,16 @@ class WardenMiddleware {
     // Перенаправляем
     ctx.redirect(wardenUrl);
   }
+
+  buildWardenRedirectUrl(returnTo) {
+    const baseUrl = 'http://profile.tusur.ru/users/sign_in';
+    const callbackUrl = `${this.config.outlineDomain}/auth/tusur/callback`;
+
+    // Создаем URL согласно документации
+    const redirectUrl = `${baseUrl}?redirect_url=${encodeURIComponent(callbackUrl)}?return_to=${returnTo}`;
+
+    return redirectUrl;
+  }
 }
 
 module.exports = WardenMiddleware;
