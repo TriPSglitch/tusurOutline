@@ -188,29 +188,29 @@ class WardenMiddleware {
         return this.redirectToWarden(ctx);
       }
 
-      if (ctx.path === '/api/auth.info') {
-        console.log(`[TUSUR Auth Info] Запрос к auth.info`);
-        console.log(`[TUSUR Auth Info] Cookies:`, {
-          accessToken: ctx.cookies.get('accessToken') ? 'present' : 'missing',
-          connectSid: ctx.cookies.get('connect.sid') ? 'present' : 'missing'
-        });
-        console.log(`[TUSUR Auth Info] ctx.state.user:`, ctx.state.user ? ctx.state.user.email : 'null');
+      // if (ctx.path === '/api/auth.info') {
+      //   console.log(`[TUSUR Auth Info] Запрос к auth.info`);
+      //   console.log(`[TUSUR Auth Info] Cookies:`, {
+      //     accessToken: ctx.cookies.get('accessToken') ? 'present' : 'missing',
+      //     connectSid: ctx.cookies.get('connect.sid') ? 'present' : 'missing'
+      //   });
+      //   console.log(`[TUSUR Auth Info] ctx.state.user:`, ctx.state.user ? ctx.state.user.email : 'null');
 
-        // Логируем заголовки
-        console.log(`[TUSUR Auth Info] Headers:`, {
-          authorization: ctx.get('Authorization'),
-          'x-user-id': ctx.get('X-User-Id'),
-          'x-user-email': ctx.get('X-User-Email')
-        });
-      }
+      //   // Логируем заголовки
+      //   console.log(`[TUSUR Auth Info] Headers:`, {
+      //     authorization: ctx.get('Authorization'),
+      //     'x-user-id': ctx.get('X-User-Id'),
+      //     'x-user-email': ctx.get('X-User-Email')
+      //   });
+      // }
 
-      if (ctx.state.user) {
-        // Помечаем пользователя как обработанного
-        ctx.state.user._tusurProcessed = true;
-        console.log(`[TUSUR Middleware] === КОНЕЦ ОБРАБОТКИ ${requestKey}, user: ${ctx.state.user.email} ===`);
-      }
+      // if (ctx.state.user) {
+      //   // Помечаем пользователя как обработанного
+      //   ctx.state.user._tusurProcessed = true;
+      //   console.log(`[TUSUR Middleware] === КОНЕЦ ОБРАБОТКИ ${requestKey}, user: ${ctx.state.user.email} ===`);
+      // }
 
-      await next();
+      // await next();
 
     };
   }
