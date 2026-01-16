@@ -60,7 +60,7 @@ services:
       # --- WebSockets ---
       - WEBSOCKETS_ENABLED=true
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
-      - SOCKETIO_PATH=/realtime/
+      - SOCKETIO_PATH=/realtime
       - SOCKETIO_TRANSPORTS=websocket
       - SOCKETIO_CORS_ORIGIN=*
       - SOCKETIO_CORS_CREDENTIALS=true
