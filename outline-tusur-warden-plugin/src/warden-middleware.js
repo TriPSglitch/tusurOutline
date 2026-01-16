@@ -64,11 +64,11 @@ class WardenMiddleware {
       // 1. Обработка WebSocket (Realtime / Collaboration)
       if (path.startsWith('/realtime') || path.includes('/collaboration')) {
         const token = ctx.cookies.get('accessToken') || ctx.query.accessToken;
-        
+
         if (token) {
           ctx.query.accessToken = token;
           ctx.headers['authorization'] = `Bearer ${token}`;
-          
+
           // Пробрасываем токен в URL для Socket.io, если его там еще нет
           if (!ctx.req.url.includes('accessToken=')) {
             const separator = ctx.req.url.includes('?') ? '&' : '?';
@@ -211,7 +211,7 @@ class WardenMiddleware {
 
       ctx.state.user = outlineUser;
       ctx.state.authToken = accessToken;
-      
+
       return outlineUser;
     } catch (error) {
       console.error('[TUSUR Sync] Ошибка синхронизации:', error);
@@ -278,7 +278,7 @@ class WardenMiddleware {
    */
   createOutlineAccessToken(user) {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    
+
     // Пытаемся вызвать нативный метод Outline
     if (typeof user.getJwtToken === 'function') {
       return user.getJwtToken(expiresAt);
@@ -307,7 +307,7 @@ class WardenMiddleware {
 
       const User = this.manager.models?.User;
       const user = await User.findOne({ where: { id: decoded.id } });
-      
+
       if (!user || !user.jwtSecret) return null;
 
       // Проверка подписи токена
@@ -322,10 +322,25 @@ class WardenMiddleware {
    * Редирект на внешний сервер авторизации (Warden)
    */
   redirectToWarden(ctx) {
-    const returnTo = encodeURIComponent(ctx.request.href);
-    const callbackUrl = encodeURIComponent(`https://${this.config.outlineDomain}/auth/tusur/callback`);
-    const wardenUrl = `http://profile.tusur.ru/users/sign_in?redirect_url=${callbackUrl}&return_to=${returnTo}`;
-    
+    const currentUrl = ctx.request.href;
+    const returnTo = encodeURIComponent(currentUrl);
+
+    // Формируем URL для warden
+    const wardenUrl = this.buildWardenRedirectUrl(returnTo);
+
+    if (this.config.debug) {
+      console.log(`[TUSUR Auth] Редирект на warden: ${wardenUrl}`);
+    }
+
+    // Сохраняем оригинальный URL для возврата
+    ctx.cookies.set('tusur_return_to', returnTo, {
+      httpOnly: true,
+      maxAge: 5 * 60 * 1000, // 5 минут
+      sameSite: 'lax',
+      secure: this.config.forceHttps
+    });
+
+    // Перенаправляем
     ctx.redirect(wardenUrl);
   }
 }
