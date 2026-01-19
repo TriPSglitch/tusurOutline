@@ -65,11 +65,11 @@ services:
       # WebSocket
       - WEBSOCKETS_ENABLED=true
       - WEBSOCKET_URL=wss://outline-docs.tusur.ru
-      - SOCKETIO_PATH=/realtime/
+      - SOCKETIO_PATH=/realtime
       - SOCKETIO_TRANSPORTS=polling, websocket
       - SOCKETIO_CORS_ORIGIN=*
       - SOCKETIO_CORS_CREDENTIALS=true
-      - DEBUG=socket.io:*,engine.io:*,engine*
+      - DEBUG=socket.io:*,engine.io:*,engine*,websocket*
       - ENGINE_IO_DEBUG=true
 
       # Хранилище
