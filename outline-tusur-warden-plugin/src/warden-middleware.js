@@ -1,4 +1,3 @@
-const url = require('url');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
@@ -11,9 +10,7 @@ class WardenMiddleware {
     this._registered = false;
   }
 
-  /**
-   * Активация плагина и регистрация middleware в приложении Outline
-   */
+  // Активация плагина и регистрация middleware в приложении Outline
   async activate(manager) {
     if (this._registered) {
       console.log('[TUSUR Warden] Middleware уже зарегистрирован, пропускаем');
@@ -41,9 +38,7 @@ class WardenMiddleware {
     }
   }
 
-  /**
-   * Деактивация плагина
-   */
+  //Деактивация плагина
   async deactivate() {
     if (this.redis) {
       await this.redis.disconnect();
@@ -51,9 +46,7 @@ class WardenMiddleware {
     console.log('[TUSUR Warden] Middleware деактивирован');
   }
 
-  /**
-   * Основной обработчик запросов (Middleware)
-   */
+  // Основной обработчик запросов (Middleware)
   createMiddleware() {
     const processedContexts = new WeakSet();
 
@@ -62,7 +55,7 @@ class WardenMiddleware {
       const method = ctx.method;
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
-      if (path.startsWith('/realtime') || path.includes('/collaboration')) {
+      if (path.includes('/realtime') || path.includes('/collaboration')) {
         const token = ctx.cookies.get('accessToken') || ctx.query.accessToken;
 
         if (token) {
@@ -135,9 +128,7 @@ class WardenMiddleware {
     };
   }
 
-  /**
-   * Проверка, является ли путь общедоступным
-   */
+  // Проверка, является ли путь общедоступным
   isPathPublic(path, publicPaths) {
     if (publicPaths.some(p => path.startsWith(p))) {
       // Исключение: API запросы (кроме auth) требуют проверки
@@ -151,9 +142,7 @@ class WardenMiddleware {
     return staticExts.some(ext => path.endsWith(ext));
   }
 
-  /**
-   * Получение данных пользователя из сессии Warden (Redis ТУСУР)
-   */
+  // Получение данных пользователя из сессии Warden
   async getWardenUser(ctx) {
     try {
       const sessionId = this.redis.getSessionIdFromCookies(ctx);
@@ -172,9 +161,7 @@ class WardenMiddleware {
     }
   }
 
-  /**
-   * Синхронизация пользователя Warden с базой данных Outline
-   */
+  // Синхронизация пользователя Warden с базой данных Outline
   async syncUserWithOutline(ctx, wardenUser) {
     try {
       const User = this.manager.models?.User;
@@ -191,13 +178,13 @@ class WardenMiddleware {
           email: wardenUser.email,
           name: wardenUser.full_name || wardenUser.name || wardenUser.email.split('@')[0],
           teamId: team.id,
-          role: 'admin', // Или ваша логика ролей
+          role: 'admin',
           lastActiveAt: new Date()
         });
         console.log(`[TUSUR Sync] Создан новый пользователь: ${outlineUser.email}`);
       }
 
-      // Проверка/генерация секретного ключа JWT (обязательно для Outline)
+      // Проверка/генерация секретного ключа JWT
       if (!outlineUser.jwtSecret && typeof outlineUser.rotateJwtSecret === 'function') {
         await outlineUser.rotateJwtSecret();
         await outlineUser.reload();
@@ -219,14 +206,12 @@ class WardenMiddleware {
     }
   }
 
-  /**
-   * Создание полноценной сессии в стиле Outline
-   */
+  // Создание полноценной сессии в Outline
   async integrateWithOutlineSession(ctx, outlineUser, accessToken) {
     const domain = '.outline-docs.tusur.ru';
-    const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 дней
+    const maxAge = 7 * 24 * 60 * 60 * 1000;
 
-    // 1. Устанавливаем accessToken (для API и WS)
+    // 1. Устанавливаем accessToken
     ctx.cookies.set('accessToken', accessToken, {
       httpOnly: false,
       secure: this.config.forceHttps,
@@ -250,16 +235,14 @@ class WardenMiddleware {
       path: '/'
     });
 
-    // 3. Синхронизация с Passport.js (если используется)
+    // 3. Синхронизация с Passport.js
     if (ctx.session) {
       ctx.session.userId = outlineUser.id;
       ctx.session.passport = { user: outlineUser.id };
     }
   }
 
-  /**
-   * Подпись токена сессии аналогично koa-session / Outline
-   */
+  // Подпись токена сессии аналогично
   signSessionToken(token) {
     const secret = process.env.SECRET_KEY;
     if (!secret) return '';
@@ -273,9 +256,7 @@ class WardenMiddleware {
       .replace(/\//g, '_');
   }
 
-  /**
-   * Создание JWT токена через встроенные методы модели User
-   */
+  // Создание JWT токена через встроенные методы модели User
   createOutlineAccessToken(user) {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
@@ -284,7 +265,7 @@ class WardenMiddleware {
       return user.getJwtToken(expiresAt);
     }
 
-    // Если метод недоступен (например, при кастомной сборке), создаем вручную
+    // Если метод недоступен, создаем вручную
     const payload = {
       id: user.id,
       expiresAt: expiresAt.toISOString(),
@@ -294,9 +275,7 @@ class WardenMiddleware {
     return jwt.sign(payload, user.jwtSecret, { algorithm: 'HS256' });
   }
 
-  /**
-   * Проверка валидности уже имеющегося accessToken
-   */
+  // Проверка валидности уже имеющегося accessToken
   async validateExistingAccessToken(ctx) {
     const token = ctx.cookies.get('accessToken');
     if (!token) return null;
@@ -318,9 +297,7 @@ class WardenMiddleware {
     }
   }
 
-  /**
-   * Редирект на внешний сервер авторизации (Warden)
-   */
+  // Редирект на внешний сервер авторизации (Warden)
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
     const returnTo = encodeURIComponent(currentUrl);
@@ -344,6 +321,7 @@ class WardenMiddleware {
     ctx.redirect(wardenUrl);
   }
 
+  // Создание URL для warden
   buildWardenRedirectUrl(returnTo) {
     const baseUrl = 'http://profile.tusur.ru/users/sign_in';
     const callbackUrl = `${this.config.outlineDomain}/auth/tusur/callback`;
