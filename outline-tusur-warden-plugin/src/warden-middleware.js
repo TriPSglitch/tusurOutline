@@ -123,11 +123,11 @@ class WardenMiddleware {
         ctx.cookies.set('_session_id', null, opts);
 
 
-        ctx.cookies.set('accessToken', null, {
-          path: '/',
-          secure: this.config.forceHttps,
-          maxAge: 0
-        });
+        // ctx.cookies.set('accessToken', null, {
+        //   path: '/',
+        //   secure: this.config.forceHttps,
+        //   maxAge: 0
+        // });
 
         console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         this.redirectToWarden(ctx);
@@ -142,6 +142,8 @@ class WardenMiddleware {
 
         console.log(`Пробуем редирект после шага 4 - ${ctx.cookies.get('tusur_return_to')}`);
         this.redirectToWarden(ctx);
+
+        await next();
 
         return;
       }
