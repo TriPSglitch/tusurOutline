@@ -174,7 +174,7 @@ class WardenMiddleware {
         '/api/auth.delete'
       ];
 
-      if (path === '/login') {
+      if (path.startsWith('/login')) {
         // Проверяем, есть ли токен. Если токена нет - сразу на Warden
         const token = ctx.cookies.get('accessToken');
         if (!token) {
