@@ -113,7 +113,7 @@ class WardenMiddleware {
           secure: this.config.forceHttps,
           maxAge: 0
         };
-        
+
         // console.log(`Пробуем редирект после шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         // this.redirectToWarden(ctx);
 
@@ -390,7 +390,12 @@ class WardenMiddleware {
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
     const returnTo = encodeURIComponent(currentUrl);
-    console.log(`Current url - ${currentUrl}`);
+    console.log(`Old url - ${currentUrl}`);
+
+    if (returnTo.includes('%2Fapi%2Fauth.delete')) {
+      returnTo = returnTo.substring(0, returnTo.indexOf('%2Fapi%2Fauth.delete')) + ctx.cookies.get('postLoginRedirectPath');
+      console.log(`New url - ${currentUrl}`);
+    }
 
     // Формируем URL для warden
     const wardenUrl = this.buildWardenRedirectUrl(returnTo);
