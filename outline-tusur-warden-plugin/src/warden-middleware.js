@@ -101,9 +101,6 @@ class WardenMiddleware {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний логаут');
         }
 
-        // console.log(`Пробуем редирект до шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
-        // this.redirectToWarden(ctx);
-
         // 2. Чистим локальные хвосты (как обсуждали ранее)
         const domain = '.outline-docs.tusur.ru';
         const opts = {
@@ -114,36 +111,27 @@ class WardenMiddleware {
           sameSite: 'lax'
         };
 
-        // console.log(`Пробуем редирект после шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
-        // this.redirectToWarden(ctx);
-
         // Удаляем наши специфичные куки
         ctx.cookies.set('connect.sid', null, opts);
         ctx.cookies.set('tusur_return_to', null, opts);
         ctx.cookies.set('_session_id', null, opts);
 
-
-        // ctx.cookies.set('accessToken', null, {
-        //   path: '/',
-        //   secure: this.config.forceHttps,
-        //   maxAge: 0
-        // });
+        ctx.cookies.set('accessToken', null, {
+          path: '/',
+          secure: this.config.forceHttps,
+          maxAge: 0
+        });
 
         console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         this.redirectToWarden(ctx);
 
-        // await next();
+        await next();
 
         // 4. Форсируем успешный ответ для фронтенда
         if (ctx.status === 401) {
           ctx.status = 200;
           ctx.body = { success: true };
         }
-
-        console.log(`Пробуем редирект после шага 4 - ${ctx.cookies.get('tusur_return_to')}`);
-        this.redirectToWarden(ctx);
-
-        await next();
 
         return;
       }
@@ -394,9 +382,7 @@ class WardenMiddleware {
   // Редирект на внешний сервер авторизации (Warden)
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
-    console.log(`Old url - ${currentUrl}`);
     const returnTo = currentUrl.includes('api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
-    console.log(`New url - ${returnTo}`);
 
     // Формируем URL для warden
     const wardenUrl = this.buildWardenRedirectUrl(returnTo);
