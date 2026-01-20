@@ -97,7 +97,7 @@ class WardenMiddleware {
           }
         } else {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний Logout');
-          console.log(`paht - ${path}`);
+          console.log(`path - ${path}`);
 
           // 2. Форсируем успешный ответ для фронтенда
           if (ctx.status === 401) {
@@ -107,7 +107,7 @@ class WardenMiddleware {
 
           if (path === '/api/auth.delete') {
             console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
-            return ctx.redirect('https://outline-docs.tusur.ru/');
+            return this.redirectToWarden(ctx);
           }
 
           return next;
@@ -139,8 +139,6 @@ class WardenMiddleware {
           sameSite: 'lax',
           maxAge: 0
         });
-
-        console.log(`paht - ${path}`);
 
         // console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         // this.redirectToWarden(ctx);
@@ -396,7 +394,7 @@ class WardenMiddleware {
   // Редирект на внешний сервер авторизации (Warden)
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
-    const returnTo = currentUrl.includes('api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/home') : encodeURIComponent(currentUrl);
+    const returnTo = currentUrl.includes('api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
 
     // Формируем URL для warden
     const wardenUrl = this.buildWardenRedirectUrl(returnTo);
