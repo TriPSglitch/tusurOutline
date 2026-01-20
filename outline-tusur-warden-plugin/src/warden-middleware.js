@@ -56,7 +56,7 @@ class WardenMiddleware {
       const method = ctx.method;
 
       if (path === '/api/auth.delete' && method === 'POST') {
-        console.log('[TUSUR Auth] Начало процедуры полного выхода (SSO Logout)');
+        console.log('[TUSUR Auth] Начало выхода');
 
         // 1. Получаем session_id, чтобы отправить его в Warden
         const sessionId = ctx.cookies.get('_session_id');
@@ -65,15 +65,15 @@ class WardenMiddleware {
           try {
             console.log(`[TUSUR Auth] Отправка запроса на удаление сессии ${sessionId} в Warden...`);
 
-            // Формируем запрос согласно вашей документации (DELETE + Cookie)
+            // Формируем запрос
             await new Promise((resolve, reject) => {
               const options = {
                 hostname: 'profile.tusur.ru',
                 port: 443,
-                path: '/users/sign_out', // Базовый путь
+                path: '/users/sign_out',
                 method: 'DELETE',
                 headers: {
-                  // Самое важное: передаем ID сессии, как в PHP примере
+                  // Передаем ID сессии
                   'Cookie': `_session_id=${sessionId}`,
                   'User-Agent': 'Outline-Docs-Server'
                 }
@@ -81,13 +81,11 @@ class WardenMiddleware {
 
               const req = https.request(options, (res) => {
                 console.log(`[TUSUR Auth] Ответ от Warden: ${res.statusCode}`);
-                // Нам не важно тело ответа, главное что сервер принял запрос
                 resolve();
               });
 
               req.on('error', (e) => {
                 console.error('[TUSUR Auth] Ошибка при запросе к Warden:', e);
-                // Не реджектим, чтобы не сломать выход локально, если Warden лежит
                 resolve();
               });
 
@@ -98,9 +96,9 @@ class WardenMiddleware {
             console.error('[TUSUR Auth] Глобальная ошибка SSO Logout:', err);
           }
         } else {
-          console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний логаут');
+          console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний Logout');
 
-          // 4. Форсируем успешный ответ для фронтенда
+          // 2. Форсируем успешный ответ для фронтенда
           if (ctx.status === 401) {
             ctx.status = 200;
             ctx.body = { success: true };
@@ -109,7 +107,7 @@ class WardenMiddleware {
           return next;
         }
 
-        // 2. Чистим локальные хвосты (как обсуждали ранее)
+        // 3. Удаляем куки
         ctx.cookies.set('connect.sid', null, {
           domain: '.outline-docs.tusur.ru',
           path: '/',
@@ -118,8 +116,6 @@ class WardenMiddleware {
           sameSite: 'lax',
           maxAge: 0
         });
-
-        // Удаляем наши специфичные куки
 
         ctx.cookies.set('_session_id', null, {
           domain: '.tusur.ru',
@@ -137,6 +133,8 @@ class WardenMiddleware {
           sameSite: 'lax',
           maxAge: 0
         });
+
+        console.log(`paht - ${path}`);
 
         // console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         // this.redirectToWarden(ctx);
