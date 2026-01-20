@@ -390,10 +390,9 @@ class WardenMiddleware {
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
     const returnTo = encodeURIComponent(currentUrl);
-    console.log(`Old url - ${returnTo}`);
+    console.log(`Old url - ${currentUrl}`);
 
     if (returnTo.includes('%2Fapi%2Fauth.delete')) {
-      returnTo = 'https%3A%2F%2Foutline-docs.tusur.ru%2F';
       console.log(`New url - ${returnTo}`);
     }
 
