@@ -54,6 +54,39 @@ class WardenMiddleware {
       const path = ctx.path;
       const method = ctx.method;
 
+      if (path === '/api/auth.delete' && method === 'POST') {
+        console.log('[TUSUR Auth] Обработка выхода из системы (Logout)');
+        
+        const domain = '.outline-docs.tusur.ru'; // Как в строке 327
+        const opts = {
+          domain: domain,
+          path: '/',
+          httpOnly: true,
+          secure: this.config.forceHttps,
+          sameSite: 'lax' // Как в строке 329
+        };
+
+        // 1. Удаляем connect.sid (который мы создавали вручную в строке 331)
+        ctx.cookies.set('connect.sid', null, { ...opts, maxAge: 0 });
+        
+        // 2. Удаляем временную куку возврата
+        ctx.cookies.set('tusur_return_to', null, { ...opts, maxAge: 0 });
+
+        // 3. (Опционально) Если вы хотите разлогинивать пользователя и из SSO ТУСУР:
+        // ctx.cookies.set('_session_id', null, { ...opts, maxAge: 0 });
+        // Но обычно _session_id управляется основным доменом, и плагин может не иметь прав его удалить.
+        
+        // 4. Пропускаем запрос дальше, чтобы Outline удалил accessToken
+        await next();
+        
+        // Принудительно ставим 200, чтобы избежать проблем с повторной отправкой
+        if (ctx.status === 401) {
+             ctx.status = 200;
+             ctx.body = { success: true };
+        }
+        return;
+      }
+
       // 1. Обработка WebSocket (Realtime / Collaboration)
       if (path.includes('/realtime') || path.includes('/collaboration')) {
         const token = ctx.cookies.get('accessToken') || ctx.query.accessToken;
