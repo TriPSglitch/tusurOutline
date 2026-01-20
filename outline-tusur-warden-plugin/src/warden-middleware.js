@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const https = require('https');
 
 class WardenMiddleware {
   constructor(plugin) {
@@ -55,34 +56,76 @@ class WardenMiddleware {
       const method = ctx.method;
 
       if (path === '/api/auth.delete' && method === 'POST') {
-        console.log('[TUSUR Auth] Обработка выхода из системы (Logout)');
-        
-        const domain = '.outline-docs.tusur.ru'; // Как в строке 327
+        console.log('[TUSUR Auth] Начало процедуры полного выхода (SSO Logout)');
+
+        // 1. Получаем session_id, чтобы отправить его в Warden
+        const sessionId = ctx.cookies.get('_session_id');
+
+        if (sessionId) {
+          try {
+            console.log(`[TUSUR Auth] Отправка запроса на удаление сессии ${sessionId} в Warden...`);
+
+            // Формируем запрос согласно вашей документации (DELETE + Cookie)
+            await new Promise((resolve, reject) => {
+              const options = {
+                hostname: 'profile.tusur.ru',
+                port: 443,
+                path: '/users/sign_out', // Базовый путь
+                method: 'DELETE',
+                headers: {
+                  // Самое важное: передаем ID сессии, как в PHP примере
+                  'Cookie': `_session_id=${sessionId}`,
+                  'User-Agent': 'Outline-Docs-Server'
+                }
+              };
+
+              const req = https.request(options, (res) => {
+                console.log(`[TUSUR Auth] Ответ от Warden: ${res.statusCode}`);
+                // Нам не важно тело ответа, главное что сервер принял запрос
+                resolve();
+              });
+
+              req.on('error', (e) => {
+                console.error('[TUSUR Auth] Ошибка при запросе к Warden:', e);
+                // Не реджектим, чтобы не сломать выход локально, если Warden лежит
+                resolve();
+              });
+
+              req.end();
+            });
+
+          } catch (err) {
+            console.error('[TUSUR Auth] Глобальная ошибка SSO Logout:', err);
+          }
+        } else {
+          console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний логаут');
+        }
+
+        // 2. Чистим локальные хвосты (как обсуждали ранее)
+        const domain = '.outline-docs.tusur.ru';
         const opts = {
           domain: domain,
           path: '/',
           httpOnly: true,
           secure: this.config.forceHttps,
-          sameSite: 'lax' // Как в строке 329
+          sameSite: 'lax'
         };
 
-        // 1. Удаляем connect.sid (который мы создавали вручную в строке 331)
+        // Удаляем наши специфичные куки
         ctx.cookies.set('connect.sid', null, { ...opts, maxAge: 0 });
-        
-        // 2. Удаляем временную куку возврата
         ctx.cookies.set('tusur_return_to', null, { ...opts, maxAge: 0 });
 
-        // 3. (Опционально) Если вы хотите разлогинивать пользователя и из SSO ТУСУР:
-        // ctx.cookies.set('_session_id', null, { ...opts, maxAge: 0 });
-        // Но обычно _session_id управляется основным доменом, и плагин может не иметь прав его удалить.
-        
-        // 4. Пропускаем запрос дальше, чтобы Outline удалил accessToken
+        // ВАЖНО: Удаляем и саму куку сессии TUSUR из браузера (опционально, но полезно для UI)
+        // Чтобы браузер тоже забыл этот ID
+        ctx.cookies.set('_session_id', null, { ...opts, maxAge: 0 });
+
+        // 3. Пропускаем дальше в ядро Outline для очистки accessToken
         await next();
-        
-        // Принудительно ставим 200, чтобы избежать проблем с повторной отправкой
+
+        // 4. Форсируем успешный ответ для фронтенда
         if (ctx.status === 401) {
-             ctx.status = 200;
-             ctx.body = { success: true };
+          ctx.status = 200;
+          ctx.body = { success: true };
         }
         return;
       }
