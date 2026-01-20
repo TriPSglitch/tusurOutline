@@ -122,8 +122,6 @@ class WardenMiddleware {
           secure: this.config.forceHttps,
           maxAge: 0
         });
-        // Переход на страницу логина или URL из ответа Warden
-        this.redirectToWarden(ctx);
 
         await next();
 
@@ -132,18 +130,21 @@ class WardenMiddleware {
           ctx.status = 200;
           ctx.body = { success: true };
         }
-        return;
+
+        console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
+        return this.redirectToWarden(ctx);
+        //return;
       }
 
-      const hasToken = !!ctx.cookies.get('accessToken');
+      // const hasToken = !!ctx.cookies.get('accessToken');
 
-      if (!hasToken) {
-        // Если это запрос страницы (не API) и токена нет
-        if (path === '/login' || path.startsWith('/doc')) {
-          console.log(`[TUSUR Auth] Неавторизованный доступ к ${path}. Редирект на Warden...`);
-          return this.redirectToWarden(ctx);
-        }
-      }
+      // if (!hasToken) {
+      //   // Если это запрос страницы (не API) и токена нет
+      //   if (path === '/login' || path.startsWith('/doc')) {
+      //     console.log(`[TUSUR Auth] Неавторизованный доступ к ${path}. Редирект на Warden...`);
+      //     return this.redirectToWarden(ctx);
+      //   }
+      // }
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
       if (path.includes('/realtime') || path.includes('/collaboration')) {
