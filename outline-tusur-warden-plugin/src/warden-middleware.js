@@ -138,7 +138,7 @@ class WardenMiddleware {
 
       if (isHtmlRequest && !hasToken) {
         // Если это запрос страницы (не API) и токена нет
-        if (path === '/login' || path.startsWith('/doc')) {
+        if (path === '/' || path === '/login' || path.startsWith('/doc')) {
           console.log(`[TUSUR Auth] Неавторизованный доступ к ${path}. Редирект на Warden...`);
           return this.redirectToWarden(ctx);
         }
