@@ -114,6 +114,7 @@ class WardenMiddleware {
         // Удаляем наши специфичные куки
         ctx.cookies.set('connect.sid', null, { ...opts, maxAge: 0 });
         ctx.cookies.set('tusur_return_to', null, { ...opts, maxAge: 0 });
+        ctx.cookies.set('accessToken', null, { ...opts, maxAge: 0});
 
         // ВАЖНО: Удаляем и саму куку сессии TUSUR из браузера (опционально, но полезно для UI)
         // Чтобы браузер тоже забыл этот ID
