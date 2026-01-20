@@ -122,7 +122,6 @@ class WardenMiddleware {
           secure: this.config.forceHttps,
           maxAge: 0
         });
-        localStorage.removeItem('accessToken');
         // Переход на страницу логина или URL из ответа Warden
         window.location.href = '/login';
 
