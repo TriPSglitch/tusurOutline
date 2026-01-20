@@ -389,8 +389,8 @@ class WardenMiddleware {
   // Редирект на внешний сервер авторизации (Warden)
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
-    const returnTo = encodeURIComponent(currentUrl);
     console.log(`Old url - ${currentUrl}`);
+    const returnTo = currentUrl.includes('api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
 
     if (returnTo.includes('%2Fapi%2Fauth.delete')) {
       console.log(`New url - ${returnTo}`);
