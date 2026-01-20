@@ -132,13 +132,16 @@ class WardenMiddleware {
         console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         this.redirectToWarden(ctx);
 
-        await next();
+        // await next();
 
         // 4. Форсируем успешный ответ для фронтенда
         if (ctx.status === 401) {
           ctx.status = 200;
           ctx.body = { success: true };
         }
+
+        console.log(`Пробуем редирект после шага 4 - ${ctx.cookies.get('tusur_return_to')}`);
+        this.redirectToWarden(ctx);
 
         return;
       }
@@ -395,10 +398,6 @@ class WardenMiddleware {
 
     // Формируем URL для warden
     const wardenUrl = this.buildWardenRedirectUrl(returnTo);
-
-    if (this.config.debug) {
-      console.log(`[TUSUR Auth] Редирект на warden: ${wardenUrl}`);
-    }
 
     // Сохраняем оригинальный URL для возврата
     ctx.cookies.set('tusur_return_to', returnTo, {
