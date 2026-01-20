@@ -144,6 +144,11 @@ class WardenMiddleware {
         return;
       }
 
+      if (path === '/api/auth.delete') {
+        console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
+        return this.redirectToWarden(ctx);
+      }
+
       // 1. Обработка WebSocket (Realtime / Collaboration)
       if (path.includes('/realtime') || path.includes('/collaboration')) {
         const token = ctx.cookies.get('accessToken') || ctx.query.accessToken;
