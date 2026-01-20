@@ -108,19 +108,21 @@ class WardenMiddleware {
           path: '/',
           httpOnly: true,
           secure: this.config.forceHttps,
-          sameSite: 'lax'
+          maxAge: 0
         };
 
         // Удаляем наши специфичные куки
-        ctx.cookies.set('connect.sid', null, { ...opts, maxAge: 0 });
-        ctx.cookies.set('tusur_return_to', null, { ...opts, maxAge: 0 });
-        ctx.cookies.set('accessToken', null, { ...opts, maxAge: 0});
+        ctx.cookies.set('connect.sid', null, opts);
+        ctx.cookies.set('tusur_return_to', null, opts);
+        ctx.cookies.set('_session_id', null, opts);
 
-        // ВАЖНО: Удаляем и саму куку сессии TUSUR из браузера (опционально, но полезно для UI)
-        // Чтобы браузер тоже забыл этот ID
-        ctx.cookies.set('_session_id', null, { ...opts, maxAge: 0 });
 
-        // 3. Пропускаем дальше в ядро Outline для очистки accessToken
+        ctx.cookies.set('accessToken', null, {
+          path: '/',
+          secure: this.config.forceHttps,
+          maxAge: 0
+        });
+
         await next();
 
         // 4. Форсируем успешный ответ для фронтенда
@@ -129,6 +131,17 @@ class WardenMiddleware {
           ctx.body = { success: true };
         }
         return;
+      }
+
+      const isHtmlRequest = ctx.accepts('html');
+      const hasToken = !!ctx.cookies.get('accessToken');
+
+      if (isHtmlRequest && !hasToken) {
+        // Если это запрос страницы (не API) и токена нет
+        if (path === '/' || path === '/login' || path.startsWith('/doc')) {
+          console.log(`[TUSUR Auth] Неавторизованный доступ к ${path}. Редирект на Warden...`);
+          return this.redirectToWarden(ctx);
+        }
       }
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
@@ -173,15 +186,6 @@ class WardenMiddleware {
         '/api/attachments.redirect',
         '/api/auth.delete'
       ];
-
-      if (path.startsWith('/login')) {
-        // Проверяем, есть ли токен. Если токена нет - сразу на Warden
-        const token = ctx.cookies.get('accessToken');
-        if (!token) {
-          console.log('[TUSUR Auth] Обнаружен переход на /login без токена. Редирект на Warden...');
-          return this.redirectToWarden(ctx);
-        }
-      }
 
       if (this.isPathPublic(path, publicPaths)) {
         return next();
