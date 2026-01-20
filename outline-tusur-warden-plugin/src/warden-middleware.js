@@ -101,8 +101,8 @@ class WardenMiddleware {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний логаут');
         }
 
-        console.log(`Пробуем редирект до шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
-        this.redirectToWarden(ctx);
+        // console.log(`Пробуем редирект до шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
+        // this.redirectToWarden(ctx);
 
         // 2. Чистим локальные хвосты (как обсуждали ранее)
         const domain = '.outline-docs.tusur.ru';
@@ -114,8 +114,8 @@ class WardenMiddleware {
           maxAge: 0
         };
         
-        console.log(`Пробуем редирект после шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
-        this.redirectToWarden(ctx);
+        // console.log(`Пробуем редирект после шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
+        // this.redirectToWarden(ctx);
 
         // Удаляем наши специфичные куки
         ctx.cookies.set('connect.sid', null, opts);
@@ -140,9 +140,7 @@ class WardenMiddleware {
           ctx.body = { success: true };
         }
 
-        console.log(`Пробуем редирект после установки ответа, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
-        console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
-        return this.redirectToWarden(ctx);
+        return;
       }
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
@@ -392,7 +390,7 @@ class WardenMiddleware {
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
     const returnTo = encodeURIComponent(currentUrl);
-    console.log(`Current url - ${returnTo}`);
+    console.log(`Current url - ${currentUrl}`);
 
     // Формируем URL для warden
     const wardenUrl = this.buildWardenRedirectUrl(returnTo);
