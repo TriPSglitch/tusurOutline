@@ -123,7 +123,7 @@ class WardenMiddleware {
           maxAge: 0
         });
         // Переход на страницу логина или URL из ответа Warden
-        window.location.href = '/login';
+        this.redirectToWarden(ctx);
 
         await next();
 
