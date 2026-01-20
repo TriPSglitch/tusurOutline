@@ -107,7 +107,7 @@ class WardenMiddleware {
 
           if (path === '/api/auth.delete') {
             console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
-            return this.redirectToWarden(ctx);
+            return ctx.redirect('https://outline-docs.tusur.ru/');
           }
 
           return next;
