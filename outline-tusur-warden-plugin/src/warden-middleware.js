@@ -110,15 +110,6 @@ class WardenMiddleware {
         }
 
         // 2. Чистим локальные хвосты (как обсуждали ранее)
-        ctx.cookies.set('tusur_return_to', null, {
-          domain: 'outline-docs.tusur.ru',
-          path: '/',
-          httpOnly: true,
-          secure: true,
-          sameSite: 'lax',
-          maxAge: 0
-        });
-        
         ctx.cookies.set('connect.sid', null, {
           domain: '.outline-docs.tusur.ru',
           path: '/',
