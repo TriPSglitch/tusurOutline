@@ -55,8 +55,6 @@ class WardenMiddleware {
       const path = ctx.path;
       const method = ctx.method;
 
-      console.log('[DEBUG Path]:', path, 'Accepts HTML:', ctx.accepts('html'));
-
       if (path === '/api/auth.delete' && method === 'POST') {
         console.log('[TUSUR Auth] Начало процедуры полного выхода (SSO Logout)');
 
@@ -124,6 +122,9 @@ class WardenMiddleware {
           secure: this.config.forceHttps,
           maxAge: 0
         });
+        localStorage.removeItem('accessToken');
+        // Переход на страницу логина или URL из ответа Warden
+        window.location.href = '/login';
 
         await next();
 
