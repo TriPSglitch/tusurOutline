@@ -101,7 +101,7 @@ class WardenMiddleware {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний логаут');
         }
 
-        console.log('Пробуем редирект до шага 2');
+        console.log(`Пробуем редирект до шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         this.redirectToWarden(ctx);
 
         // 2. Чистим локальные хвосты (как обсуждали ранее)
@@ -114,7 +114,7 @@ class WardenMiddleware {
           maxAge: 0
         };
         
-        console.log('Пробуем редирект после шага 2');
+        console.log(`Пробуем редирект после шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         this.redirectToWarden(ctx);
 
         // Удаляем наши специфичные куки
@@ -129,7 +129,7 @@ class WardenMiddleware {
           maxAge: 0
         });
 
-        console.log('Пробуем редирект после отчистки куки');
+        console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         this.redirectToWarden(ctx);
 
         await next();
@@ -140,7 +140,7 @@ class WardenMiddleware {
           ctx.body = { success: true };
         }
 
-        console.log('Пробуем редирект после установки ответа');
+        console.log(`Пробуем редирект после установки ответа, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
         return this.redirectToWarden(ctx);
       }
