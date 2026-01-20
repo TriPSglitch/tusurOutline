@@ -415,7 +415,7 @@ class WardenMiddleware {
 
   // Создание URL для warden
   buildWardenRedirectUrl(returnTo) {
-    const baseUrl = 'http://profile.tusur.ru/users/sign_in';
+    const baseUrl = 'https://profile.tusur.ru/users/sign_in';
     const callbackUrl = `${this.config.outlineDomain}/auth/tusur/callback`;
 
     // Создаем URL согласно документации
