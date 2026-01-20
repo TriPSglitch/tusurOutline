@@ -106,8 +106,8 @@ class WardenMiddleware {
         const opts = {
           domain: domain,
           path: '/',
-          httpOnly: true,
-          secure: this.config.forceHttps,
+          //httpOnly: true,
+          //secure: this.config.forceHttps,
           sameSite: 'lax'
         };
 
@@ -118,7 +118,7 @@ class WardenMiddleware {
 
         ctx.cookies.set('accessToken', null, {
           path: '/',
-          secure: this.config.forceHttps,
+          //secure: this.config.forceHttps,
           maxAge: 0
         });
 
