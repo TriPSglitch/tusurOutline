@@ -390,11 +390,11 @@ class WardenMiddleware {
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
     const returnTo = encodeURIComponent(currentUrl);
-    console.log(`Old url - ${currentUrl}`);
+    console.log(`Old url - ${returnTo}`);
 
     if (returnTo.includes('%2Fapi%2Fauth.delete')) {
-      returnTo = returnTo.substring(0, returnTo.indexOf('%2Fapi%2Fauth.delete')) + ctx.cookies.get('postLoginRedirectPath');
-      console.log(`New url - ${currentUrl}`);
+      returnTo = returnTo.substring(0, returnTo.indexOf('%2Fapi%2Fauth.delete')) + ctx.cookies.get('postLoginRedirectPath').toString();
+      console.log(`New url - ${returnTo}`);
     }
 
     // Формируем URL для warden
