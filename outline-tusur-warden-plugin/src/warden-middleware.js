@@ -102,23 +102,39 @@ class WardenMiddleware {
         }
 
         // 2. Чистим локальные хвосты (как обсуждали ранее)
-        const domain = '.outline-docs.tusur.ru';
-        const opts = {
-          domain: domain,
+        ctx.cookies.set('connect.sid', null, {
+          domain: '.outline-docs.tusur.ru',
           path: '/',
           httpOnly: true,
-          secure: this.config.forceHttps,
-          sameSite: 'lax'
-        };
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 0
+        });
 
         // Удаляем наши специфичные куки
-        ctx.cookies.set('connect.sid', null, opts);
-        ctx.cookies.set('tusur_return_to', null, opts);
-        ctx.cookies.set('_session_id', null, opts);
+        ctx.cookies.set('tusur_return_to', null, {
+          domain: 'outline-docs.tusur.ru',
+          path: '/',
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 0
+        });
+
+        ctx.cookies.set('_session_id', null, {
+          domain: '.tusur.ru',
+          path: '/',
+          httpOnly: true,
+          secure: false,
+          maxAge: 0
+        });
 
         ctx.cookies.set('accessToken', null, {
+          domain: '.outline-docs.tusur.ru',
           path: '/',
-          secure: this.config.forceHttps,
+          httpOnly: false,
+          secure: true,
+          sameSite: 'lax',
           maxAge: 0
         });
 
@@ -382,7 +398,7 @@ class WardenMiddleware {
   // Редирект на внешний сервер авторизации (Warden)
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
-    const returnTo = currentUrl.includes('api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
+    const returnTo = currentUrl.includes('api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/home') : encodeURIComponent(currentUrl);
 
     // Формируем URL для warden
     const wardenUrl = this.buildWardenRedirectUrl(returnTo);
