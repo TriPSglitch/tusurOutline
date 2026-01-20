@@ -101,6 +101,9 @@ class WardenMiddleware {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний логаут');
         }
 
+        console.log('Пробуем редирект до шага 2');
+        this.redirectToWarden(ctx);
+
         // 2. Чистим локальные хвосты (как обсуждали ранее)
         const domain = '.outline-docs.tusur.ru';
         const opts = {
@@ -110,6 +113,9 @@ class WardenMiddleware {
           secure: this.config.forceHttps,
           maxAge: 0
         };
+        
+        console.log('Пробуем редирект после шага 2');
+        this.redirectToWarden(ctx);
 
         // Удаляем наши специфичные куки
         ctx.cookies.set('connect.sid', null, opts);
@@ -123,6 +129,9 @@ class WardenMiddleware {
           maxAge: 0
         });
 
+        console.log('Пробуем редирект после отчистки куки');
+        this.redirectToWarden(ctx);
+
         await next();
 
         // 4. Форсируем успешный ответ для фронтенда
@@ -131,20 +140,10 @@ class WardenMiddleware {
           ctx.body = { success: true };
         }
 
+        console.log('Пробуем редирект после установки ответа');
         console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
         return this.redirectToWarden(ctx);
-        //return;
       }
-
-      // const hasToken = !!ctx.cookies.get('accessToken');
-
-      // if (!hasToken) {
-      //   // Если это запрос страницы (не API) и токена нет
-      //   if (path === '/login' || path.startsWith('/doc')) {
-      //     console.log(`[TUSUR Auth] Неавторизованный доступ к ${path}. Редирект на Warden...`);
-      //     return this.redirectToWarden(ctx);
-      //   }
-      // }
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
       if (path.includes('/realtime') || path.includes('/collaboration')) {
