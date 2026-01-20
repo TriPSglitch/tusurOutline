@@ -173,6 +173,15 @@ class WardenMiddleware {
         '/api/auth.delete'
       ];
 
+      if (path === '/login') {
+        // Проверяем, есть ли токен. Если токена нет - сразу на Warden
+        const token = ctx.cookies.get('accessToken');
+        if (!token) {
+          console.log('[TUSUR Auth] Обнаружен переход на /login без токена. Редирект на Warden...');
+          return this.redirectToWarden(ctx);
+        }
+      }
+
       if (this.isPathPublic(path, publicPaths)) {
         return next();
       }
@@ -194,7 +203,7 @@ class WardenMiddleware {
       }
 
       // 5. Если доступа нет: API возвращает 401, Веб — редирект на Warden
-      if (path.startsWith('/api/') || path === '/login') {
+      if (path.startsWith('/api/')) {
         ctx.status = 401;
         ctx.body = { error: 'authentication_required' };
       } else {
