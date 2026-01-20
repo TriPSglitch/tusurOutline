@@ -97,11 +97,17 @@ class WardenMiddleware {
           }
         } else {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний Logout');
+          console.log(`paht - ${path}`);
 
           // 2. Форсируем успешный ответ для фронтенда
           if (ctx.status === 401) {
             ctx.status = 200;
             ctx.body = { success: true };
+          }
+
+          if (path === '/api/auth.delete') {
+            console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
+            return this.redirectToWarden(ctx);
           }
 
           return next;
@@ -142,11 +148,6 @@ class WardenMiddleware {
         await next();
 
         return;
-      }
-
-      if (path === '/api/auth.delete') {
-        console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
-        return this.redirectToWarden(ctx);
       }
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
