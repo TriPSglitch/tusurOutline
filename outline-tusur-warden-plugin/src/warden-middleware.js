@@ -393,7 +393,7 @@ class WardenMiddleware {
     console.log(`Old url - ${returnTo}`);
 
     if (returnTo.includes('%2Fapi%2Fauth.delete')) {
-      returnTo = returnTo.substring(0, returnTo.indexOf('%2Fapi%2Fauth.delete')) + ctx.cookies.get('postLoginRedirectPath').toString();
+      returnTo = 'https%3A%2F%2Foutline-docs.tusur.ru%2F';
       console.log(`New url - ${returnTo}`);
     }
 
