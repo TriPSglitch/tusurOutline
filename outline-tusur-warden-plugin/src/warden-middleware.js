@@ -135,9 +135,10 @@ class WardenMiddleware {
         return;
       }
 
+      const isHtmlRequest = ctx.accepts('html');
       const hasToken = !!ctx.cookies.get('accessToken');
 
-      if (!hasToken) {
+      if (isHtmlRequest && !hasToken) {
         // Если это запрос страницы (не API) и токена нет
         if (path === '/' || path === '/login' || path.startsWith('/doc')) {
           console.log(`[TUSUR Auth] Неавторизованный доступ к ${path}. Редирект на Warden...`);
