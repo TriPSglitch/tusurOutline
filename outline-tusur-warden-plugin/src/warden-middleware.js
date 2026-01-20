@@ -122,8 +122,8 @@ class WardenMiddleware {
           maxAge: 0
         });
 
-        console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
-        this.redirectToWarden(ctx);
+        // console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
+        // this.redirectToWarden(ctx);
 
         await next();
 
