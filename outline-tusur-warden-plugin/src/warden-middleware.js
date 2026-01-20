@@ -100,46 +100,48 @@ class WardenMiddleware {
         } else {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний логаут');
 
+          // 4. Форсируем успешный ответ для фронтенда
+          if (ctx.status === 401) {
+            ctx.status = 200;
+            ctx.body = { success: true };
+          }
 
-          // 2. Чистим локальные хвосты (как обсуждали ранее)
-          ctx.cookies.set('connect.sid', null, {
-            domain: '.outline-docs.tusur.ru',
-            path: '/',
-            httpOnly: true,
-            secure: true,
-            sameSite: 'lax',
-            maxAge: 0
-          });
-
-          // Удаляем наши специфичные куки
-          ctx.cookies.set('_session_id', null, {
-            domain: '.tusur.ru',
-            path: '/',
-            httpOnly: true,
-            secure: false,
-            maxAge: 0
-          });
-
-          ctx.cookies.set('accessToken', null, {
-            domain: '.outline-docs.tusur.ru',
-            path: '/',
-            httpOnly: false,
-            secure: true,
-            sameSite: 'lax',
-            maxAge: 0
-          });
-
-          // console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
-          // this.redirectToWarden(ctx);
-
-          await next();
+          return next;
         }
 
-        // 4. Форсируем успешный ответ для фронтенда
-        if (ctx.status === 401) {
-          ctx.status = 200;
-          ctx.body = { success: true };
-        }
+        // 2. Чистим локальные хвосты (как обсуждали ранее)
+        ctx.cookies.set('connect.sid', null, {
+          domain: '.outline-docs.tusur.ru',
+          path: '/',
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 0
+        });
+
+        // Удаляем наши специфичные куки
+
+        ctx.cookies.set('_session_id', null, {
+          domain: '.tusur.ru',
+          path: '/',
+          httpOnly: true,
+          secure: false,
+          maxAge: 0
+        });
+
+        ctx.cookies.set('accessToken', null, {
+          domain: '.outline-docs.tusur.ru',
+          path: '/',
+          httpOnly: false,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 0
+        });
+
+        // console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
+        // this.redirectToWarden(ctx);
+
+        await next();
 
         return;
       }
