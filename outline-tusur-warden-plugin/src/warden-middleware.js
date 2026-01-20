@@ -111,7 +111,7 @@ class WardenMiddleware {
           path: '/',
           httpOnly: true,
           secure: this.config.forceHttps,
-          maxAge: 0
+          sameSite: 'lax'
         };
 
         // console.log(`Пробуем редирект после шага 2, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
