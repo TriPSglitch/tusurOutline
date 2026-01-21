@@ -115,42 +115,41 @@ class WardenMiddleware {
         // 3. Удаляем куки
         ctx.cookies.set('connect.sid', null, {
           domain: '.outline-docs.tusur.ru',
-          path: '/',
           httpOnly: true,
-          secure: true,
+          path: '/',
           sameSite: 'lax',
+          secure: true,
           maxAge: 0
         });
 
         ctx.cookies.set('accessToken', null, {
           domain: '.outline-docs.tusur.ru',
-          path: '/',
           httpOnly: false,
-          secure: true,
+          path: '/',
           sameSite: 'lax',
+          secure: true,
           maxAge: 0
         });
 
         ctx.cookies.set('csrfToken', null, {
           domain: '.outline-docs.tusur.ru',
-          path: '/',
           httpOnly: false,
-          secure: true,
+          path: '/',
           sameSite: 'lax',
+          secure: true,
           maxAge: 0
         });
 
         ctx.cookies.set('sessions', null, {
           domain: '.outline-docs.tusur.ru',
-          path: '/',
           httpOnly: false,
+          path: '/',
           secure: false,
           maxAge: 0
         });
 
         ctx.cookies.set('tusur_return_to', null, {
           domain: 'outline-docs.tusur.ru',
-          hostOnly: true,
           httpOnly: true,
           path: '/',
           sameSite: 'lax',
@@ -160,14 +159,13 @@ class WardenMiddleware {
 
         ctx.cookies.set('_session_id', null, {
           domain: '.tusur.ru',
-          path: '/',
           httpOnly: true,
+          path: '/',
           secure: false,
           maxAge: 0
         });
 
-        // console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
-        // this.redirectToWarden(ctx);
+        console.log(`ctx.session - ${ctx.session}`);
 
         // await next();
 
