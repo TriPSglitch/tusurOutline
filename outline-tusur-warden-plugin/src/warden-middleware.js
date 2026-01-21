@@ -165,8 +165,6 @@ class WardenMiddleware {
           maxAge: 0
         });
 
-        console.log(`ctx.session - ${ctx.session}`);
-
         // await next();
 
         ctx.status = 200;
@@ -208,7 +206,7 @@ class WardenMiddleware {
         '/auth/tusur/debug',
         '/auth/tusur/test',
         '/auth/debug/session',
-        '/login',
+        // '/login',
         '/healthz',
         '/robots.txt',
         '/favicon.ico',
