@@ -132,7 +132,7 @@ class WardenMiddleware {
         });
 
         ctx.cookies.set('tusur_return_to', null, {
-          domain: '.outline-docs.tusur.ru',
+          domain: 'outline-docs.tusur.ru',
           path: '/',
           httpOnly: true,
           secure: true,
@@ -148,9 +148,6 @@ class WardenMiddleware {
           maxAge: 0
         });
 
-        console.log(`ctx.state.user - ${ctx.state.user}`);
-        console.log(`ctx.state.authToken - ${ctx.state.authToken}`);
-
         // console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         // this.redirectToWarden(ctx);
 
@@ -159,7 +156,7 @@ class WardenMiddleware {
         ctx.status = 200;
         ctx.body = { success: true };
 
-        return await next();
+        return;
       }
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
