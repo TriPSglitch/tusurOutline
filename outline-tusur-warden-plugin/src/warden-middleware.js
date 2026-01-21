@@ -98,19 +98,6 @@ class WardenMiddleware {
           }
         } else {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний Logout');
-          // console.log(`path - ${path}`);
-
-          // // 2. Форсируем успешный ответ для фронтенда
-          // if (ctx.status === 401) {
-          //   ctx.status = 200;
-          //   ctx.body = { success: true };
-          // }
-
-          // if (path === '/api/auth.delete') {
-          //   return this.redirectToWarden(ctx);
-          // }
-
-          // return;
         }
 
         // 3. Удаляем куки
@@ -166,8 +153,6 @@ class WardenMiddleware {
           maxAge: 0
         });
 
-        // await next();
-
         ctx.status = 200;
         ctx.body = { success: true };
 
@@ -209,12 +194,12 @@ class WardenMiddleware {
         '/auth/tusur/debug',
         '/auth/tusur/test',
         '/auth/debug/session',
-        // '/login',
+        '/login',
         '/healthz',
         '/robots.txt',
         '/favicon.ico',
         '/static',
-        // '/api/auth.config',
+        '/api/auth.config',
         '/api/attachments.redirect',
         '/api/auth.delete'
       ];
@@ -422,19 +407,7 @@ class WardenMiddleware {
   // Редирект на внешний сервер авторизации (Warden)
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
-    console.log(`[TUSUR Auth] Редирект на авторизацию изначальный адрес: ${currentUrl}`);
-
-    // if (currentUrl.includes('/api/auth.config')) {
-    //   ctx.redirect('https://outline-docs.tusur.ru/');
-    //   return;
-    // }
-
-    // const returnTo = (currentUrl.includes('/api/auth.config') || currentUrl.includes('/login')) ? 
-    //                   encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
-
     const returnTo = encodeURIComponent(currentUrl);
-
-    console.log(`[TUSUR Auth] Редирект на авторизацию конечный адрес: ${returnTo}`);
 
     // Формируем URL для warden
     const wardenUrl = this.buildWardenRedirectUrl(returnTo);
