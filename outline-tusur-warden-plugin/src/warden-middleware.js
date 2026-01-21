@@ -171,7 +171,7 @@ class WardenMiddleware {
         ctx.status = 200;
         ctx.body = { success: true };
 
-        return next;
+        return;
       }
 
       console.log(`ctx.path after of logout method - ${path}`);
@@ -424,14 +424,16 @@ class WardenMiddleware {
     const currentUrl = ctx.request.href;
     console.log(`[TUSUR Auth] Редирект на авторизацию изначальный адрес: ${currentUrl}`);
 
-    if (currentUrl.includes('/api/auth.config')) {
-      ctx.redirect('https://outline-docs.tusur.ru/');
-      return;
-    }
+    // if (currentUrl.includes('/api/auth.config')) {
+    //   ctx.redirect('https://outline-docs.tusur.ru/');
+    //   return;
+    // }
 
-    const returnTo = (currentUrl.includes('/api/auth.config') || currentUrl.includes('/login')) ? 
-                      encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
-                      
+    // const returnTo = (currentUrl.includes('/api/auth.config') || currentUrl.includes('/login')) ? 
+    //                   encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
+
+    const returnTo = encdoeURIComponent(currentUrl);
+
     console.log(`[TUSUR Auth] Редирект на авторизацию конечный адрес: ${returnTo}`);
 
     // Формируем URL для warden
