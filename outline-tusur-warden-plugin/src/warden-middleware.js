@@ -171,8 +171,10 @@ class WardenMiddleware {
         ctx.status = 200;
         ctx.body = { success: true };
 
-        return;
+        return next;
       }
+
+      console.log(`ctx.path after of logout method - ${path}`);
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
       if (path.includes('/realtime') || path.includes('/collaboration')) {
