@@ -54,6 +54,7 @@ class WardenMiddleware {
     return async (ctx, next) => {
       const path = ctx.path;
       const method = ctx.method;
+      console.log(`ctx.path in begin of create method - ${path}`);
 
       if (path === '/api/auth.delete' && method === 'POST') {
         console.log('[TUSUR Auth] Начало выхода');
@@ -170,7 +171,7 @@ class WardenMiddleware {
         ctx.status = 200;
         ctx.body = { success: true };
 
-        return next;
+        return;
       }
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
