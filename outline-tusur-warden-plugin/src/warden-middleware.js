@@ -122,20 +122,29 @@ class WardenMiddleware {
           maxAge: 0
         });
 
-        ctx.cookies.set('_session_id', null, {
-          domain: '.tusur.ru',
-          path: '/',
-          httpOnly: true,
-          secure: false,
-          maxAge: 0
-        });
-
         ctx.cookies.set('accessToken', null, {
           domain: '.outline-docs.tusur.ru',
           path: '/',
           httpOnly: false,
           secure: true,
           sameSite: 'lax',
+          maxAge: 0
+        });
+
+        ctx.cookies.set('tusur_return_to', null, {
+          domain: 'outline-docs.tusur.ru',
+          path: '/',
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 0
+        });
+
+        ctx.cookies.set('_session_id', null, {
+          domain: '.tusur.ru',
+          path: '/',
+          httpOnly: true,
+          secure: false,
           maxAge: 0
         });
 
