@@ -97,17 +97,17 @@ class WardenMiddleware {
           }
         } else {
           console.log('[TUSUR Auth] _session_id не найден, пропускаем внешний Logout');
-          console.log(`path - ${path}`);
+          // console.log(`path - ${path}`);
 
-          // 2. Форсируем успешный ответ для фронтенда
-          if (ctx.status === 401) {
-            ctx.status = 200;
-            ctx.body = { success: true };
-          }
+          // // 2. Форсируем успешный ответ для фронтенда
+          // if (ctx.status === 401) {
+          //   ctx.status = 200;
+          //   ctx.body = { success: true };
+          // }
 
-          if (path === '/api/auth.delete') {
-            return this.redirectToWarden(ctx);
-          }
+          // if (path === '/api/auth.delete') {
+          //   return this.redirectToWarden(ctx);
+          // }
 
           return;
         }
@@ -143,6 +143,9 @@ class WardenMiddleware {
         // this.redirectToWarden(ctx);
 
         // await next();
+
+        ctx.status = 200;
+        ctx.body = { success: true };
 
         return;
       }
