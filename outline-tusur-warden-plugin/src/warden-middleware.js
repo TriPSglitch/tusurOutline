@@ -131,6 +131,23 @@ class WardenMiddleware {
           maxAge: 0
         });
 
+        ctx.cookies.set('csrfToken', null, {
+          domain: '.outline-docs.tusur.ru',
+          path: '/',
+          httpOnly: false,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 0
+        });
+
+        ctx.cookies.set('sessions', null, {
+          domain: '.outline-docs.tusur.ru',
+          path: '/',
+          httpOnly: false,
+          secure: false,
+          maxAge: 0
+        });
+
         ctx.cookies.set('tusur_return_to', null, {
           domain: 'outline-docs.tusur.ru',
           path: '/',
