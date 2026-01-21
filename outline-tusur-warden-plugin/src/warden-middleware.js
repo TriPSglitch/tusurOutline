@@ -237,7 +237,7 @@ class WardenMiddleware {
       }
 
       // 5. Если доступа нет: API возвращает 401, Веб — редирект на Warden
-      if (path.startsWith('/api/')) {
+      if (path.startsWith('/api/') && !path.startsWith('/api/auth.delete')) {
         ctx.status = 401;
         ctx.body = { error: 'authentication_required' };
       } else {
