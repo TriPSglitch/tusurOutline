@@ -159,7 +159,7 @@ class WardenMiddleware {
         ctx.status = 200;
         ctx.body = { success: true };
 
-        return;
+        return await next();
       }
 
       // 1. Обработка WebSocket (Realtime / Collaboration)
