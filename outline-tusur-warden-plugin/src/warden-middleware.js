@@ -214,7 +214,7 @@ class WardenMiddleware {
         '/robots.txt',
         '/favicon.ico',
         '/static',
-        // '/api/auth.config',
+        '/api/auth.config',
         '/api/attachments.redirect',
         '/api/auth.delete'
       ];
@@ -240,7 +240,7 @@ class WardenMiddleware {
       }
 
       // 5. Если доступа нет: API возвращает 401, Веб — редирект на Warden
-      if (path.startsWith('/api/') && !path.startsWith('/api/auth.config')) {
+      if (path.startsWith('/api/')) {
         ctx.status = 401;
         ctx.body = { error: 'authentication_required' };
       } else {
