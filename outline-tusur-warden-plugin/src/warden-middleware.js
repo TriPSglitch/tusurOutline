@@ -432,7 +432,7 @@ class WardenMiddleware {
     // const returnTo = (currentUrl.includes('/api/auth.config') || currentUrl.includes('/login')) ? 
     //                   encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
 
-    const returnTo = encdoeURIComponent(currentUrl);
+    const returnTo = encodeURIComponent(currentUrl);
 
     console.log(`[TUSUR Auth] Редирект на авторизацию конечный адрес: ${returnTo}`);
 
