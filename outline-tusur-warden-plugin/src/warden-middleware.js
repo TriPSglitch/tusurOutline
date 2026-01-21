@@ -109,7 +109,7 @@ class WardenMiddleware {
           //   return this.redirectToWarden(ctx);
           // }
 
-          return;
+          // return;
         }
 
         // 3. Удаляем куки
