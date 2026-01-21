@@ -106,11 +106,10 @@ class WardenMiddleware {
           }
 
           if (path === '/api/auth.delete') {
-            console.log(`[TUSUR Auth] Редирект на авторизацию: ${path}`);
             return this.redirectToWarden(ctx);
           }
 
-          return next;
+          return;
         }
 
         // 3. Удаляем куки
@@ -143,7 +142,7 @@ class WardenMiddleware {
         // console.log(`Пробуем редирект после отчистки куки, url для редиректа - ${ctx.cookies.get('tusur_return_to')}`);
         // this.redirectToWarden(ctx);
 
-        await next();
+        // await next();
 
         return;
       }
@@ -394,8 +393,9 @@ class WardenMiddleware {
   // Редирект на внешний сервер авторизации (Warden)
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
-    const returnTo = currentUrl.includes('api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
-    console.log(`redirect url - ${ctx.redirectUrl}`);
+    console.log(`[TUSUR Auth] Редирект на авторизацию изначальный адрес: ${currentUrl}`);
+    const returnTo = currentUrl.includes('/api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
+    console.log(`[TUSUR Auth] Редирект на авторизацию конечный адрес: ${returnTo}`);
 
     // Формируем URL для warden
     const wardenUrl = this.buildWardenRedirectUrl(returnTo);
