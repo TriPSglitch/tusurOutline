@@ -150,10 +150,11 @@ class WardenMiddleware {
 
         ctx.cookies.set('tusur_return_to', null, {
           domain: 'outline-docs.tusur.ru',
-          path: '/',
+          hostOnly: true,
           httpOnly: true,
-          secure: true,
+          path: '/',
           sameSite: 'lax',
+          secure: true,
           maxAge: 0
         });
 
