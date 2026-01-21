@@ -212,8 +212,8 @@ class WardenMiddleware {
         '/favicon.ico',
         '/static',
         '/api/auth.config',
-        '/api/attachments.redirect',
-        '/api/auth.delete'
+        '/api/attachments.redirect'
+        // '/api/auth.delete'
       ];
 
       if (this.isPathPublic(path, publicPaths)) {
