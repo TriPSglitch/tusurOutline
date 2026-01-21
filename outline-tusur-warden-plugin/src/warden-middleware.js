@@ -214,9 +214,9 @@ class WardenMiddleware {
         '/robots.txt',
         '/favicon.ico',
         '/static',
-        '/api/auth.config',
-        '/api/attachments.redirect'
-        // '/api/auth.delete'
+        // '/api/auth.config',
+        '/api/attachments.redirect',
+        '/api/auth.delete'
       ];
 
       if (this.isPathPublic(path, publicPaths)) {
@@ -240,7 +240,7 @@ class WardenMiddleware {
       }
 
       // 5. Если доступа нет: API возвращает 401, Веб — редирект на Warden
-      if (path.startsWith('/api/') && !path.startsWith('/api/auth.delete')) {
+      if (path.startsWith('/api/') && !path.startsWith('/api/auth.config')) {
         ctx.status = 401;
         ctx.body = { error: 'authentication_required' };
       } else {
@@ -423,7 +423,7 @@ class WardenMiddleware {
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
     console.log(`[TUSUR Auth] Редирект на авторизацию изначальный адрес: ${currentUrl}`);
-    const returnTo = (currentUrl.includes('/api/auth.delete') || currentUrl.includes('/login')) ? 
+    const returnTo = (currentUrl.includes('/api/auth.config') || currentUrl.includes('/login')) ? 
                       encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
     console.log(`[TUSUR Auth] Редирект на авторизацию конечный адрес: ${returnTo}`);
 
