@@ -420,7 +420,8 @@ class WardenMiddleware {
   redirectToWarden(ctx) {
     const currentUrl = ctx.request.href;
     console.log(`[TUSUR Auth] Редирект на авторизацию изначальный адрес: ${currentUrl}`);
-    const returnTo = currentUrl.includes('/api/auth.delete') ? encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
+    const returnTo = (currentUrl.includes('/api/auth.delete') || currentUrl.includes('/login')) ? 
+                      encodeURIComponent('https://outline-docs.tusur.ru/') : encodeURIComponent(currentUrl);
     console.log(`[TUSUR Auth] Редирект на авторизацию конечный адрес: ${returnTo}`);
 
     // Формируем URL для warden
