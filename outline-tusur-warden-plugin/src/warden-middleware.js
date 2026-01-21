@@ -214,7 +214,7 @@ class WardenMiddleware {
         '/robots.txt',
         '/favicon.ico',
         '/static',
-        '/api/auth.config',
+        // '/api/auth.config',
         '/api/attachments.redirect',
         '/api/auth.delete'
       ];
