@@ -186,10 +186,7 @@ class WardenMiddleware {
       const publicPaths = [
         '/auth',
         '/auth/',
-        '/auth/tusur',
         '/auth/tusur/callback',
-        '/auth/tusur/debug',
-        '/auth/tusur/test',
         '/auth/debug/session',
         '/login',
         '/healthz',
