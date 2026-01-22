@@ -89,15 +89,7 @@ class AuthRoutes {
         ctx.redirect(decodeURIComponent(returnTo));
       });
 
-      // Маршрут для ручного входа
-      this.router.get('/auth/tusur', (ctx) => {
-        const currentUrl = ctx.request.href;
-        const returnTo = encodeURIComponent(currentUrl);
-        const wardenUrl = `https://profile.tusur.ru/users/sign_in?redirect_url=${encodeURIComponent('https://outline-docs.tusur.ru/auth/tusur/callback?return_to=' + returnTo)}`;
-        ctx.redirect(wardenUrl);
-      });
-
-      console.log('[TUSUR Auth Routes] Добавлено 2 маршрута');
+      console.log('[TUSUR Auth Routes] Добавлен 1 маршрут');
     } catch (error) {
       console.error('[TUSUR Auth Routes] Ошибка добавления маршрутов:', error.message);
     }
