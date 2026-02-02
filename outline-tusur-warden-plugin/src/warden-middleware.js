@@ -279,7 +279,7 @@ class WardenMiddleware {
           email: wardenUser.email,
           name: wardenUser.full_name || wardenUser.name || wardenUser.email.split('@')[0],
           teamId: team.id,
-          role: 'admin',
+          role: 'editor',
           lastActiveAt: new Date()
         });
         console.log(`[TUSUR Sync] Создан новый пользователь: ${outlineUser.email}`);
