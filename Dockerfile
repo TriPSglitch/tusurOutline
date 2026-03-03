@@ -1,4 +1,4 @@
-FROM outlinewiki/outline:latest
+FROM outlinewiki/outline:1.3.0
 
 # Устанавливаем зависимости для работы с Redis
 USER root

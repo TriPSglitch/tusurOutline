@@ -6,7 +6,7 @@ sudo systemctl reload nginx
 
 # Останавливаем и удаляем старые контейнеры
 sudo docker-compose -f docker-compose.yml down
-sudo docker rmi outline_outline outlinewiki/outline:latest 2>/dev/null || true
+sudo docker rmi outline_outline outlinewiki/outline:1.3.0 2>/dev/null || true
 sudo docker volume prune -f
 
 # Собираем кастомный образ Outline

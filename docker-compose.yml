@@ -22,7 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: outlinewiki/outline:latest
+    image: outlinewiki/outline:1.3.0
     user: "1000:1000"
     restart: unless-stopped
     ports:
